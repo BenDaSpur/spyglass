@@ -3,7 +3,7 @@
 	import logo from '$lib/images/svelte-logo.svg';
 	import github from '$lib/images/github.svg';
 </script>
-
+<!-- 
 <header>
 	<div class="corner">
 		<a href="https://svelte.dev/docs/kit">
@@ -36,8 +36,8 @@
 			<img src={github} alt="GitHub" />
 		</a>
 	</div>
-</header>
-
+</header> -->
+<!-- 
 <style>
 	header {
 		display: flex;
@@ -126,4 +126,4 @@
 	a:hover {
 		color: var(--color-theme-1);
 	}
-</style>
+</style> -->
