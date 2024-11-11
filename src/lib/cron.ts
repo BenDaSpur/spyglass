@@ -10,7 +10,7 @@ import {
 	NODE_ENV
 } from '$env/static/private';
 
-const baseUrl = NODE_ENV === 'development' ? 'http://localhost:5173' : '';
+const baseUrl = NODE_ENV === 'development' ? 'http://localhost:5173' : 'https://spyglass-gamma.vercel.app';
 
 const r = new snoowrap({
 	userAgent: 'Node.js script for subreddit analysis',
