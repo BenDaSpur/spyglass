@@ -2,6 +2,25 @@ import { json } from '@sveltejs/kit';
 import prisma from '$lib/prisma.js';
 import { SPYGLASS_SAFETY_KEY } from '$env/static/private';
 
+export async function GET({ url }) {
+	const username = url.searchParams.get('username');
+
+	if (!username) {
+		return json({ error: 'Username is required' }, { status: 400 });
+	}
+	const user = await prisma.user.findFirstOrThrow({
+		where: {
+			username
+		},
+		include: {
+			posts: true,
+			comments: true
+		}
+	});
+
+	return json(user);
+}
+
 export async function POST({ request }) {
 	const { username } = await request.json();
 
