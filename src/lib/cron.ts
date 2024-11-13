@@ -28,20 +28,29 @@ export const run = async () => {
 		console.log(subreddit);
 		if (subreddit.tracking) {
 			const posts = await getLatestSubredditPosts(subreddit.name);
+			let postCount = 0
 			for (const post of posts) {
+				postCount = postCount + 1;
 				// console.log('post', post);
 				// console.log(post.id);
 				await upsertUser(post.author.name);
 				await upsertPost(post);
 				const comments = await getPostComments(post);
+				let postCommentsCount = 0;
 				// console.log(comments);
 				for (const comment of comments) {
+					postCommentsCount = postCommentsCount + 1;
 					if (comment.author.name !== '[deleted]' && comment.author.name !== 'AutoModerator') {
 						const userInfo = await getUserAndPosts(comment.author.name);
 						await upsertUser(comment.author.name);
+						let userCommentCount = 0;
 						for (const userComment of userInfo.comments) {
+							userCommentCount = userCommentCount + 1;
 							const isAlreadyInserted = await getCommentById(userComment.id);
 							if (isAlreadyInserted.length === 0) {
+								// console.log(`////// ${subreddit.name} \\\\\\  ${postCount} OF ${posts.length}`)
+								// console.log(`////// ${subreddit.name} postComment \\\\\\  ${postCommentsCount} OF ${comments.length}`)
+								console.log(`////// ${subreddit.name} \\\\\ userComments ${userCommentCount} OF ${userInfo.comments.length} \\\\\\  postComment ${postCommentsCount} OF ${comments.length}`)
 								// console.log('Inserting comment', JSON.stringify(userComment));
 								await upsertSubreddit(
 									userComment.subreddit.display_name,
@@ -134,7 +143,7 @@ const upsertPost = async (submission: Submission) => {
 };
 
 const upsertComment = async (comment: Comment) => {
-	console.log(JSON.stringify(comment));
+	// console.log(JSON.stringify(comment));
 	const response = await axios(`${baseUrl}/api/reddit/comment`, {
 		method: 'POST',
 		headers: {

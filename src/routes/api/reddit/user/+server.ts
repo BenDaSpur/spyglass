@@ -10,7 +10,10 @@ export async function GET({ url }) {
 	}
 	const user = await prisma.user.findFirstOrThrow({
 		where: {
-			username
+			username: {
+				mode: 'insensitive',
+				startsWith: username
+			}
 		},
 		include: {
 			posts: true,

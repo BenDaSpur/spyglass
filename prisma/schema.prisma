@@ -45,4 +45,6 @@ model Comment {
     authorName    String
     subreddit     Subreddit @relation(fields: [subredditName], references: [name])
     subredditName String
+
+    @@index([authorName, subredditName])
 }

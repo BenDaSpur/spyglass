@@ -1,0 +1,25 @@
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background Circle -->
+  <circle cx="100" cy="100" r="100" fill="#003366"/>
+
+  <!-- Spyglass Group -->
+  <g transform="rotate(-45 100 100)">
+    <!-- Spyglass Body -->
+    <rect x="95" y="50" width="10" height="100" fill="#C0C0C0" stroke="#FFFFFF" stroke-width="2"/>
+    <!-- Spyglass Lens -->
+    <circle cx="100" cy="50" r="30" fill="#C0C0C0" stroke="#FFFFFF" stroke-width="2"/>
+    <circle cx="100" cy="50" r="10" fill="#ADD8E6"/>
+    <!-- Lens Sparkle -->
+    <circle cx="105" cy="45" r="3" fill="#FFFFFF"/>
+  </g>
+
+  <!-- Crosshair in Lens -->
+  <line x1="95" y1="50" x2="105" y2="50" stroke="#FFFFFF" stroke-width="1"/>
+  <line x1="100" y1="45" x2="100" y2="55" stroke="#FFFFFF" stroke-width="1"/>
+
+  <!-- Optional Stars for Navigation Theme -->
+  <circle cx="30" cy="30" r="2" fill="#FFFFFF"/>
+  <circle cx="170" cy="40" r="1.5" fill="#FFFFFF"/>
+  <circle cx="160" cy="150" r="2.5" fill="#FFFFFF"/>
+  <circle cx="40" cy="160" r="2" fill="#FFFFFF"/>
+</svg>

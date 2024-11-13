@@ -20,6 +20,7 @@
 		"@sveltejs/adapter-auto": "^3.0.0",
 		"@sveltejs/kit": "^2.0.0",
 		"@sveltejs/vite-plugin-svelte": "^4.0.0",
+		"@types/d3": "^7.4.3",
 		"@types/eslint": "^9.6.0",
 		"@types/node-cron": "^3.0.11",
 		"eslint": "^9.7.0",
@@ -40,9 +41,13 @@
 		"@prisma/client": "^5.22.0",
 		"@sveltejs/adapter-vercel": "^5.4.6",
 		"@sveltestrap/sveltestrap": "^6.2.7",
+		"apexcharts": "^4.0.0",
 		"axios": "^1.7.7",
+		"d3": "^7.9.0",
 		"node-cron": "^3.0.3",
 		"snoowrap": "^1.23.0",
-		"tsx": "^4.19.2"
+		"svelte-apexcharts": "^1.0.2",
+		"tsx": "^4.19.2",
+		"vite-plugin-iso-import": "^1.1.0"
 	}
 }

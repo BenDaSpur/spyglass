@@ -1,9 +1,9 @@
-import * as scripty from '$lib/cron';
+import { run } from '$lib/cron';
 import type { Handle } from '@sveltejs/kit';
 import cron from 'node-cron';
 
 cron.schedule('0 * * * *', () => {
-	scripty.run();
+	run();
 });
 
 export const handle: Handle = async ({ event, resolve }) => {

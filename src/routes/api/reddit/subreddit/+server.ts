@@ -4,8 +4,17 @@ import { SPYGLASS_SAFETY_KEY } from '$env/static/private';
 
 // /api/newsletter GET
 
-export async function GET() {
-	const subreddits = await prisma.subreddit.findMany();
+export async function GET({ url }) {
+	const search = url.searchParams.get('search') || '';
+
+	const subreddits = await prisma.subreddit.findMany({
+		where: {
+			name: {
+				contains: search,
+				mode: 'insensitive'
+			}
+		}
+	});
 	return json(subreddits);
 }
 
