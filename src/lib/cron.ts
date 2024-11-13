@@ -20,7 +20,7 @@ const r = new snoowrap({
 	password: REDDIT_PASSWORD
 });
 
-export const run = async () => {
+export default async function run() {
 	console.log('BASE URL::::', baseUrl);
 	// await upsertSubredditWatch('javascript');
 	const subreddits = await getWatchedSubreddits();
@@ -28,7 +28,7 @@ export const run = async () => {
 		console.log(subreddit);
 		if (subreddit.tracking) {
 			const posts = await getLatestSubredditPosts(subreddit.name);
-			let postCount = 0
+			let postCount = 0;
 			for (const post of posts) {
 				postCount = postCount + 1;
 				// console.log('post', post);
@@ -50,7 +50,9 @@ export const run = async () => {
 							if (isAlreadyInserted.length === 0) {
 								// console.log(`////// ${subreddit.name} \\\\\\  ${postCount} OF ${posts.length}`)
 								// console.log(`////// ${subreddit.name} postComment \\\\\\  ${postCommentsCount} OF ${comments.length}`)
-								console.log(`////// ${subreddit.name} \\\\\ userComments ${userCommentCount} OF ${userInfo.comments.length} \\\\\\  postComment ${postCommentsCount} OF ${comments.length}`)
+								console.log(
+									`////// ${subreddit.name} \\\\\ userComments ${userCommentCount} OF ${userInfo.comments.length} \\\\\\  postComment ${postCommentsCount} OF ${comments.length}`
+								);
 								// console.log('Inserting comment', JSON.stringify(userComment));
 								await upsertSubreddit(
 									userComment.subreddit.display_name,
@@ -65,7 +67,7 @@ export const run = async () => {
 			}
 		}
 	}
-};
+}
 
 const getUserAndPosts = async (
 	username: string
@@ -163,5 +165,3 @@ const getWatchedSubreddits = async () => {
 	const subreddits = await response.data;
 	return subreddits;
 };
-
-run();
