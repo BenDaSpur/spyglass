@@ -44,3 +44,21 @@ export async function POST({ request }) {
 
 	return json(newSubreddit);
 }
+
+async function getSubreddits() {
+	// First, get the interactions
+	const interactions = await getSubredditInteractions();
+
+	// Use a Set to collect unique subreddit names
+	const subredditSet = new Set<string>();
+
+	interactions.forEach((interaction) => {
+		subredditSet.add(interaction.Subreddit_A);
+		subredditSet.add(interaction.Subreddit_B);
+	});
+
+	// Convert the Set to an array
+	const subredditNames = Array.from(subredditSet);
+
+	return subredditNames;
+}
