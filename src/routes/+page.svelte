@@ -3,6 +3,7 @@
 	import { Styles, Row, Col, Container, Input, Spinner, Modal, Button } from '@sveltestrap/sveltestrap';
 	import BarChart from '$lib/components/BarChart.svelte';
 	import { onMount } from 'svelte';
+	import CountUp from '$lib/components/CountUp.svelte';
 
 	let search = '';
 	let subredditSearch = $state('');
@@ -93,15 +94,18 @@
 		<Col>
 			<p>
 				<b>
-					{totalUsersCount.toLocaleString()}
+					<CountUp targetNumber={totalUsersCount} duration={3000} />
+					<!-- {totalUsersCount.toLocaleString()} -->
 				</b>
-				unique users<br />
+				unique reddit users<br />
 				<b>
-					{totalCommentsCount.toLocaleString()}
+					<CountUp targetNumber={totalCommentsCount} duration={3000} />
+					<!-- {totalCommentsCount.toLocaleString()} -->
 				</b>
 				individual comments<br />
 				<b>
-					{totalSubredditsCount.toLocaleString()}
+					<CountUp targetNumber={totalSubredditsCount} duration={3000} />
+					<!-- {totalSubredditsCount.toLocaleString()} -->
 				</b>
 				subreddit's recorded<br />
 			</p>
