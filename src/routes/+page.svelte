@@ -29,11 +29,13 @@
 	// 	console.log('chartData', chartData);
 	// });
 
-	async function getSubredditData() {
+	async function getSubredditData(searchedSubreddit: string) {
 		if (!subredditSearch) {
 			filteredSubreddits = [];
+			subredditSearch = '';
 			return;
 		}
+		subredditSearch = searchedSubreddit;
 		await searchFilteredSubreddits();
 
 		clearTimeout(timeout);
@@ -120,7 +122,7 @@
 			placeholder="Search Subreddit"
 			name="subreddit_search"
 			bind:value={subredditSearch}
-			on:input={getSubredditData}
+			on:input={() => getSubredditData(subredditSearch)}
 		/>
 		<Row>
 			<Col>
@@ -149,8 +151,7 @@
 							<p
 								style="cursor: pointer;"
 								on:click={() => {
-									subredditSearch = subreddit.name;
-									getSubredditData();
+									getSubredditData(subreddit.name);
 									// getSubredditData(window.document.getElementsByName('subreddit_search')[0]);
 								}}
 							>

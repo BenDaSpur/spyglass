@@ -82,7 +82,7 @@ const getUserAndPosts = async (
 
 const getLatestSubredditPosts = async (subredditName: string): Promise<Submission[]> => {
 	const subreddit = r.getSubreddit(subredditName);
-	const submissions = await subreddit.getNew({ limit: 5 });
+	const submissions = await subreddit.getHot({ limit: 5 });
 	return submissions;
 };
 
@@ -163,5 +163,6 @@ const getWatchedSubreddits = async () => {
 	const response = await axios(`${baseUrl}/api/reddit/subreddit`);
 	// console.log(response);
 	const subreddits = await response.data;
-	return subreddits;
+	const shuffledSubreddits = subreddits.sort(() => Math.random() - 0.5);
+	return shuffledSubreddits;
 };
