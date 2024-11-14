@@ -74,7 +74,7 @@
 	onMount(async () => {
 		const interval = setInterval(async () => {
 			await getStats();
-		}, 5000);
+		}, 20000);
 
 		return () => clearInterval(interval);
 	});
@@ -94,17 +94,17 @@
 		<Col>
 			<p>
 				<b>
-					<CountUp targetNumber={totalUsersCount} duration={3000} />
+					<CountUp targetNumber={totalUsersCount} duration={5000} />
 					<!-- {totalUsersCount.toLocaleString()} -->
 				</b>
 				unique reddit users<br />
 				<b>
-					<CountUp targetNumber={totalCommentsCount} duration={3000} />
+					<CountUp targetNumber={totalCommentsCount} duration={5000} />
 					<!-- {totalCommentsCount.toLocaleString()} -->
 				</b>
 				individual comments<br />
 				<b>
-					<CountUp targetNumber={totalSubredditsCount} duration={3000} />
+					<CountUp targetNumber={totalSubredditsCount} duration={5000} />
 					<!-- {totalSubredditsCount.toLocaleString()} -->
 				</b>
 				subreddit's recorded<br />
