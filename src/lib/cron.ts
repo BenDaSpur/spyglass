@@ -82,8 +82,9 @@ const getUserAndPosts = async (
 
 const getLatestSubredditPosts = async (subredditName: string): Promise<Submission[]> => {
 	const subreddit = r.getSubreddit(subredditName);
-	const submissions = await subreddit.getHot({ limit: 5 });
-	return submissions;
+	const newSubmissions = await subreddit.getNew({ limit: 5 });
+	const hotSubmissions = await subreddit.getHot({ limit: 5 });
+	return [...newSubmissions, ...hotSubmissions];
 };
 
 const getCommentById = async (commentId: string) => {
