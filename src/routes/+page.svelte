@@ -30,7 +30,7 @@
 	// });
 
 	async function getSubredditData(searchedSubreddit: string) {
-		if (!subredditSearch) {
+		if (!subredditSearch || subredditSearch.length == 0) {
 			filteredSubreddits = [];
 			subredditSearch = '';
 			return;
@@ -73,7 +73,7 @@
 	onMount(async () => {
 		const interval = setInterval(async () => {
 			await getStats();
-		}, 30000);
+		}, 5000);
 
 		return () => clearInterval(interval);
 	});
@@ -135,6 +135,7 @@
 						style="cursor: pointer;"
 						on:click={() => {
 							subredditSearch = '';
+							getSubredditData('');
 							// filteredSubreddits = [];
 						}}
 					>

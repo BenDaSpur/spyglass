@@ -1,4 +1,3 @@
-// import { REDDIT_CLIENT_ID } from '$env/static/private';
 import snoowrap, { type RedditUser, type Submission, type Comment } from 'snoowrap';
 import axios from 'axios';
 import {
@@ -22,7 +21,6 @@ const r = new snoowrap({
 
 export default async function run() {
 	console.log('BASE URL::::', baseUrl);
-	// await upsertSubredditWatch('javascript');
 	const subreddits = await getWatchedSubreddits();
 	for (const subreddit of subreddits) {
 		console.log(subreddit);
@@ -31,13 +29,10 @@ export default async function run() {
 			let postCount = 0;
 			for (const post of posts) {
 				postCount = postCount + 1;
-				// console.log('post', post);
-				// console.log(post.id);
 				await upsertUser(post.author.name);
 				await upsertPost(post);
 				const comments = await getPostComments(post);
 				let postCommentsCount = 0;
-				// console.log(comments);
 				for (const comment of comments) {
 					postCommentsCount = postCommentsCount + 1;
 					if (comment.author.name !== '[deleted]' && comment.author.name !== 'AutoModerator') {
@@ -48,12 +43,9 @@ export default async function run() {
 							userCommentCount = userCommentCount + 1;
 							const isAlreadyInserted = await getCommentById(userComment.id);
 							if (isAlreadyInserted.length === 0) {
-								// console.log(`////// ${subreddit.name} \\\\\\  ${postCount} OF ${posts.length}`)
-								// console.log(`////// ${subreddit.name} postComment \\\\\\  ${postCommentsCount} OF ${comments.length}`)
 								console.log(
 									`////// ${subreddit.name} \\\\\ userComments ${userCommentCount} OF ${userInfo.comments.length} \\\\\\  postComment ${postCommentsCount} OF ${comments.length}`
 								);
-								// console.log('Inserting comment', JSON.stringify(userComment));
 								await upsertSubreddit(
 									userComment.subreddit.display_name,
 									subreddits.some((s) => s.name === userComment.subreddit.display_name && s.tracking)
@@ -71,20 +63,48 @@ export default async function run() {
 
 const getUserAndPosts = async (
 	username: string
-): Promise<{ user: RedditUser; comments: Comment[]; userSubmissions: Submission[] }> => {
-	const user: RedditUser = await r.getUser(username);
-	const [comments, userSubmissions] = await Promise.all([
-		user.getComments({ limit: Infinity }),
-		user.getSubmissions({ limit: Infinity })
-	]);
-	return { user, comments, userSubmissions };
+): Promise<{
+	user: RedditUser | null;
+	comments: Comment[];
+	userSubmissions: Submission[];
+}> => {
+	try {
+		const user: RedditUser = await r.getUser(username);
+		const [comments, userSubmissions] = await Promise.all([
+			user.getComments({ limit: Infinity }),
+			user.getSubmissions({ limit: Infinity })
+		]);
+		return { user, comments, userSubmissions };
+	} catch (error) {
+		if (error.statusCode === 429) {
+			console.log('Received 429 error when fetching user data for', username);
+		} else {
+			console.error('Error fetching user data for', username, error);
+		}
+		return { user: null, comments: [], userSubmissions: [] };
+	}
 };
 
 const getLatestSubredditPosts = async (subredditName: string): Promise<Submission[]> => {
-	const subreddit = r.getSubreddit(subredditName);
-	const newSubmissions = await subreddit.getNew({ limit: 5 });
-	const hotSubmissions = await subreddit.getHot({ limit: 5 });
-	return [...newSubmissions, ...hotSubmissions];
+	try {
+		const subreddit = r.getSubreddit(subredditName);
+		const newSubmissions = await subreddit.getNew({ limit: 5 });
+
+		let hotSubmissions: Submission[] = [];
+		if (Math.random() <= 0.2) {
+			hotSubmissions = await subreddit.getHot({ limit: 5 });
+		}
+		const allSubmissions = [...newSubmissions, ...hotSubmissions];
+		const shuffledSubmissions = allSubmissions.sort(() => Math.random() - 0.5);
+		return shuffledSubmissions;
+	} catch (error) {
+		if (error.statusCode === 429) {
+			console.log('Received 429 error when fetching posts for subreddit', subredditName);
+		} else {
+			console.error('Error fetching posts for subreddit', subredditName, error);
+		}
+		return [];
+	}
 };
 
 const getCommentById = async (commentId: string) => {
@@ -94,8 +114,20 @@ const getCommentById = async (commentId: string) => {
 };
 
 const getPostComments = async (submission: Submission): Promise<Comment[]> => {
-	const comments = await submission.expandReplies({ limit: Infinity, depth: Infinity });
-	return comments.comments;
+	try {
+		const comments = await submission.expandReplies({
+			limit: Infinity,
+			depth: Infinity
+		});
+		return comments.comments;
+	} catch (error) {
+		if (error.statusCode === 429) {
+			console.log('Received 429 error when fetching comments for submission', submission.id);
+		} else {
+			console.error('Error fetching comments for submission', submission.id, error);
+		}
+		return [];
+	}
 };
 
 const upsertUser = async (user: string) => {
@@ -146,7 +178,6 @@ const upsertPost = async (submission: Submission) => {
 };
 
 const upsertComment = async (comment: Comment) => {
-	// console.log(JSON.stringify(comment));
 	const response = await axios(`${baseUrl}/api/reddit/comment`, {
 		method: 'POST',
 		headers: {
@@ -161,8 +192,7 @@ const upsertComment = async (comment: Comment) => {
 };
 
 const getWatchedSubreddits = async () => {
-	const response = await axios(`${baseUrl}/api/reddit/subreddit`);
-	// console.log(response);
+	const response = await axios(`${baseUrl}/api/reddit/subreddit/watched`);
 	const subreddits = await response.data;
 	const shuffledSubreddits = subreddits.sort(() => Math.random() - 0.5);
 	return shuffledSubreddits;
