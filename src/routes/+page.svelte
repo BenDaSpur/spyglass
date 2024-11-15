@@ -105,7 +105,7 @@
 		await getStats();
 		const interval = setInterval(async () => {
 			await getStats();
-		}, 20000);
+		}, 3600000);
 
 		return () => clearInterval(interval);
 	});
