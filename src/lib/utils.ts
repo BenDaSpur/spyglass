@@ -15,6 +15,7 @@ export const defaultSubreddits = [
 	'Documentaries',
 	'EarthPorn',
 	'explainlikeimfive',
+	'facepalm',
 	'food',
 	'funny',
 	'Futurology',

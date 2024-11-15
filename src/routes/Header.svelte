@@ -1,36 +1,36 @@
 <script lang="ts">
-	import {
-		Collapse,
-		NavbarToggler,
-		NavbarBrand,
-		Nav,
-		Navbar,
-		NavItem,
-		NavLink,
-		Dropdown,
-		DropdownToggle,
-		DropdownMenu,
-		DropdownItem,
-		Button,
-		Modal
-	} from '@sveltestrap/sveltestrap';
-
-	let isOpen = false;
-
-	function handleUpdate(event) {
-		isOpen = event.detail.isOpen;
-	}
+	import { page } from '$app/stores';
 
 	// let modalOpen = false;
 	// const toggle = () => (modalOpen = !open);
 </script>
 
-<Navbar color="light" light expand="md" container="md">
-	<NavbarBrand href="/">
-		<img src="/logo.svg" alt="Spyglass" width="30" height="30" class="d-inline-block align-top" />
-		Spyglass
-	</NavbarBrand>
-	<NavItem>
-		<NavLink href="https://github.com/BenDaSpur/spyglass" target="_blank">GitHub</NavLink>
-	</NavItem>
-</Navbar>
+<nav class="navbar navbar-expand-lg bg-body-tertiary">
+	<div class="container-fluid">
+		<a class="navbar-brand" href="/">
+			<img src="/logo.svg" alt="Spyglass" width="30" height="30" class="d-inline-block align-top me-2" />
+			Spyglass
+		</a>
+		<button
+			class="navbar-toggler"
+			type="button"
+			data-bs-toggle="collapse"
+			data-bs-target="#navbarSupportedContent"
+			aria-controls="navbarSupportedContent"
+			aria-expanded="false"
+			aria-label="Toggle navigation"
+		>
+			<span class="navbar-toggler-icon"></span>
+		</button>
+		<div class="collapse navbar-collapse" id="navbarSupportedContent">
+			<ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+				<li class="nav-item">
+					<a class="nav-link {$page.url.pathname == '/user' ? 'active' : ''}" href="/user">User</a>
+				</li>
+				<li class="nav-item">
+					<a class="nav-link" target="_blank" href="https://github.com/BenDaSpur/spyglass">GitHub</a>
+				</li>
+			</ul>
+		</div>
+	</div>
+</nav>

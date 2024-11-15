@@ -142,17 +142,18 @@
 			Tracking all data that originates from /r/h3h3productions, /r/h3snark, /r/Hasan_Piker, /r/Destiny,
 			/r/LivestreamFail
 		</small>
-		<Input
+		<input
+			class="form-control"
 			type="text"
 			placeholder="Search Subreddit"
 			bind:value={subredditSearch}
-			on:input={handleSubredditSearchInput}
+			oninput={handleSubredditSearchInput}
 		/>
 		{#if subredditSearch}
 			<!-- svelte-ignore a11y_click_events_have_key_events -->
 			<!-- svelte-ignore event_directive_deprecated -->
 			<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-			<p style="cursor: pointer;" on:click={clearSubredditSearch}>Clear</p>
+			<p style="cursor: pointer;" onclick={clearSubredditSearch}>Clear</p>
 		{/if}
 		<div style="max-height: 200px; overflow-y: auto;" class="bg-light p-2">
 			{#if filteredSubreddits.length}
@@ -162,7 +163,7 @@
 					<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 					<p
 						style="cursor: pointer;"
-						on:click={() => {
+						onclick={() => {
 							subredditSearch = subreddit.name;
 							filteredSubreddits = [];
 							getSubredditData(subreddit.name);

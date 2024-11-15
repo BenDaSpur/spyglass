@@ -8,7 +8,7 @@ export async function GET({ url }) {
 	if (!username) {
 		return json(await prisma.user.findMany());
 	}
-	const user = await prisma.user.findFirstOrThrow({
+	const user = await prisma.user.findFirst({
 		where: {
 			username: {
 				mode: 'insensitive',
@@ -16,10 +16,26 @@ export async function GET({ url }) {
 			}
 		},
 		include: {
-			posts: true,
-			comments: true
+			posts: {
+				select: {
+					title: true,
+					subredditName: true,
+					permalink: true
+				}
+			},
+			comments: {
+				select: {
+					content: true,
+					subredditName: true,
+					permalink: true
+				}
+			}
 		}
 	});
+
+	if (!user) {
+		return json({ error: 'User not found' }, { status: 404 });
+	}
 
 	return json(user);
 }
