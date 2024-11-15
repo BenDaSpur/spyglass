@@ -10,7 +10,7 @@ export async function GET({ url }) {
 	if (!id) {
 		return json({ error: 'ID is required' }, { status: 400 });
 	}
-	const theComment = await prisma.comment.findMany({
+	const theComment = await prisma.comment.findFirstOrThrow({
 		where: {
 			id
 		}

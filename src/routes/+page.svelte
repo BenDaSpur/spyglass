@@ -52,10 +52,11 @@
 
 	// Function to fetch subreddit data
 	async function getSubredditData(searchedSubreddit) {
+		chartData = [];
+		commentCount = 0;
+		subredditAuthors = [];
+
 		if (!searchedSubreddit) {
-			chartData = [];
-			commentCount = 0;
-			subredditAuthors = [];
 			return;
 		}
 		loading = true;
@@ -139,8 +140,48 @@
 <Row>
 	<Col>
 		<small>
-			Tracking all data that originates from /r/h3h3productions, /r/h3snark, /r/Hasan_Piker, /r/Destiny,
-			/r/LivestreamFail
+			Tracking all data that originates from /r/<a
+				href="#"
+				onclick={() => {
+					subredditSearch = 'h3h3productions';
+					getSubredditData('h3h3productions');
+				}}
+			>
+				h3h3productions
+			</a>
+			, /r/<a
+				href="#"
+				onclick={() => {
+					subredditSearch = 'h3snark';
+					getSubredditData('h3snark');
+				}}
+			>
+				h3snark
+			</a>, /r/<a
+				href="#"
+				onclick={() => {
+					subredditSearch = 'Hasan_Piker';
+					getSubredditData('Hasan_Piker');
+				}}
+			>
+				Hasan_Piker
+			</a>, /r/<a
+				href="#"
+				onclick={() => {
+					subredditSearch = 'Destiny';
+					getSubredditData('Destiny');
+				}}
+			>
+				Destiny
+			</a>, /r/<a
+				href="#"
+				onclick={() => {
+					subredditSearch = 'LivestreamFail';
+					getSubredditData('LivestreamFail');
+				}}
+			>
+				LivestreamFail
+			</a>
 		</small>
 		<input
 			class="form-control"

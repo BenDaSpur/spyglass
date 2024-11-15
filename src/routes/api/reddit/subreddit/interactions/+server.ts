@@ -1,5 +1,6 @@
 import prisma from '$lib/prisma';
 import { json } from '@sveltejs/kit';
+import { redis } from '$lib/redis.js';
 
 export async function GET({ url }) {
 	const subredditName = url.searchParams.get('subreddit');
@@ -10,10 +11,16 @@ export async function GET({ url }) {
 	}
 
 	const sharedCount = parseInt(sharedUserCount);
-	const interactions = await getTopInteractionsFromSubreddit(subredditName, sharedCount);
-	console.log(interactions);
-	const sorted = interactions.sort((a, b) => b.otherSubreddit - a.otherSubreddit);
-	return json(sorted);
+
+	// await redis.del(`subredditInteractions:${subredditName}:${sharedCount}`);
+	if (await redis.get(`subredditInteractions:${subredditName}:${sharedCount}`)) {
+		return json(await redis.get(`subredditInteractions:${subredditName}:${sharedCount}`));
+	} else {
+		const interactions = await getTopInteractionsFromSubreddit(subredditName, sharedCount);
+		const sorted = interactions.sort((a, b) => b.sharedUserCount - a.sharedUserCount);
+		await redis.set(`subredditInteractions:${subredditName}:${sharedCount}`, JSON.stringify(sorted));
+		return json(sorted);
+	}
 }
 
 async function getTopInteractionsFromSubreddit(subredditName: string, limit: number = 10) {

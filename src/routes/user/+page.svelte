@@ -63,9 +63,17 @@
 	<Col>
 		<Input bind:value={$userNameInput} placeholder="Enter a Reddit username" on:input={() => getUserHistory()} />
 		{#if $userNameInput}
-			<ul>
+			<small>
+				<!-- Showing results for: {$userNameInput} -->
+				<a href="#" on:click={() => ($userNameInput = '')}>Clear</a>
+			</small>
+			<ul style="max-height: 200px; overflow-y: auto;" class="bg-light">
 				{#each $allUsers.filter((u) => u.username.toLowerCase().includes($userNameInput.toLowerCase())) as filteredUser}
-					<li>{filteredUser.username}</li>
+					<li>
+						<a href="#" on:click={() => ($userNameInput = filteredUser.username)}>
+							{filteredUser.username}
+						</a>
+					</li>
 				{/each}
 			</ul>
 		{/if}
