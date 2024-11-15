@@ -1,77 +1,107 @@
 <script lang="ts">
-	// import SubredditGraph from '$lib/components/SubredditGraph.svelte';
-	import { Styles, Row, Col, Container, Input, Spinner, Modal, Button } from '@sveltestrap/sveltestrap';
-	import BarChart from '$lib/components/BarChart.svelte';
 	import { onMount } from 'svelte';
+	import { Styles, Row, Col, Input, Spinner } from '@sveltestrap/sveltestrap';
+	import BarChart from '$lib/components/BarChart.svelte';
 	import CountUp from '$lib/components/CountUp.svelte';
 
 	let search = '';
-	let subredditSearch = $state('');
+	let subredditSearch = '';
+	let results = [];
+	let chartData = [];
+	let subreddits = [];
+	let filteredSubreddits = [];
+	let loading = false;
+	let commentCount = 0;
+	let subredditAuthors = [];
+	let totalUsersCount = 0;
+	let totalCommentsCount = 0;
+	let totalSubredditsCount = 0;
 
 	let timeout;
 
-	let results = $state([]);
-	let chartData = $state([]);
-	let subreddits = $state([]);
-	let filteredSubreddits = $state([]);
-	let loading = $state(false);
-	let commentCount = $state(0);
-	let subredditAuthors = $state([]);
-	let totalUsersCount = $state(0);
-	let totalCommentsCount = $state(0);
-	let totalSubredditsCount = $state(0);
-
-	let open = false;
-	const toggle = () => (open = !open);
-
-	// onMount(async () => {
-	// 	const response = await fetch('/api/reddit/subreddit/interactions?subreddit=h3snark');
-	// 	chartData = await response.json();
-	// 	console.log('chartData', chartData);
-	// });
-
-	async function getSubredditData(searchedSubreddit: string) {
-		if (!subredditSearch || subredditSearch.length == 0) {
-			filteredSubreddits = [];
-			subredditSearch = '';
-			return;
-		}
-		subredditSearch = searchedSubreddit;
-		await searchFilteredSubreddits();
-
+	// Debounce function to delay execution
+	function debounce(func, delay) {
 		clearTimeout(timeout);
-		timeout = setTimeout(async () => {
-			chartData = [];
-			commentCount = 0;
-			subredditAuthors = [];
-			loading = true;
-			const commentCountResponse = await fetch(`/api/reddit/subreddit/count?search=${subredditSearch}`);
-			const commentCountJson = await commentCountResponse.json();
-			commentCount = commentCountJson.comments;
-			subredditAuthors = commentCountJson.authors;
-			const response = await fetch(`/api/reddit/subreddit/interactions?subreddit=${subredditSearch}`);
-			const chartJson = await response.json();
-			// chartData = chartJson.sort((a, b) => b.subreddit - a.subreddit);
-			chartData = chartJson.sort((a, b) => b.subreddit - a.subreddit);
-			loading = false;
+		timeout = setTimeout(func, delay);
+	}
+
+	// Function to handle input changes in the subreddit search field
+	function handleSubredditSearchInput(event) {
+		const searchTerm = event.target.value.trim();
+		subredditSearch = searchTerm;
+		searchFilteredSubreddits(searchTerm);
+		debounce(() => {
+			getSubredditData(searchTerm);
 		}, 500);
 	}
 
-	async function searchFilteredSubreddits() {
-		const response = await fetch(`/api/reddit/subreddit?search=${subredditSearch}`);
-		const data = await response.json();
-		filteredSubreddits = data;
+	// Function to fetch filtered subreddits based on the search input
+	async function searchFilteredSubreddits(searchTerm) {
+		if (!searchTerm) {
+			filteredSubreddits = [];
+			return;
+		}
+		try {
+			const response = await fetch(`/api/reddit/subreddit?search=${encodeURIComponent(searchTerm)}`);
+			const data = await response.json();
+			filteredSubreddits = data;
+		} catch (error) {
+			console.error('Error fetching filtered subreddits:', error);
+		}
 	}
 
+	// Function to fetch subreddit data
+	async function getSubredditData(searchedSubreddit) {
+		if (!searchedSubreddit) {
+			chartData = [];
+			commentCount = 0;
+			subredditAuthors = [];
+			return;
+		}
+		loading = true;
+		try {
+			const [commentCountResponse, interactionsResponse] = await Promise.all([
+				fetch(`/api/reddit/subreddit/count?search=${encodeURIComponent(searchedSubreddit)}`),
+				fetch(`/api/reddit/subreddit/interactions?subreddit=${encodeURIComponent(searchedSubreddit)}`)
+			]);
+
+			const commentCountJson = await commentCountResponse.json();
+			commentCount = commentCountJson.comments;
+			subredditAuthors = commentCountJson.authors;
+
+			const chartJson = await interactionsResponse.json();
+			chartData = chartJson.sort((a, b) => b.subreddit - a.subreddit);
+		} catch (error) {
+			console.error('Error fetching subreddit data:', error);
+		} finally {
+			loading = false;
+		}
+	}
+
+	// Function to clear the subreddit search
+	function clearSubredditSearch() {
+		subredditSearch = '';
+		filteredSubreddits = [];
+		chartData = [];
+		commentCount = 0;
+		subredditAuthors = [];
+	}
+
+	// Function to get overall stats
 	async function getStats() {
-		const response = await fetch('/api/reddit/stats');
-		const data = await response.json();
-		totalUsersCount = data.users;
-		totalCommentsCount = data.comments;
-		totalSubredditsCount = data.subreddits;
+		try {
+			const response = await fetch('/api/reddit/stats');
+			const data = await response.json();
+			totalUsersCount = data.users;
+			totalCommentsCount = data.comments;
+			totalSubredditsCount = data.subreddits;
+		} catch (error) {
+			console.error('Error fetching stats:', error);
+		}
 	}
 
 	onMount(async () => {
+		await getStats();
 		const interval = setInterval(async () => {
 			await getStats();
 		}, 20000);
@@ -82,129 +112,75 @@
 
 <svelte:head>
 	<title>Spyglass</title>
-	<meta name="description" content="Search reddit" />
+	<meta name="description" content="Search Reddit" />
 </svelte:head>
 
 <Styles />
 
-{#await getStats()}
-	<!-- promise is pending -->
-{:then stats}
-	<Row class="my-3">
-		<Col>
-			<p>
-				<b>
-					<CountUp targetNumber={totalUsersCount} duration={5000} />
-					<!-- {totalUsersCount.toLocaleString()} -->
-				</b>
-				unique reddit users<br />
-				<b>
-					<CountUp targetNumber={totalCommentsCount} duration={5000} />
-					<!-- {totalCommentsCount.toLocaleString()} -->
-				</b>
-				individual comments<br />
-				<b>
-					<CountUp targetNumber={totalSubredditsCount} duration={5000} />
-					<!-- {totalSubredditsCount.toLocaleString()} -->
-				</b>
-				subreddit's recorded<br />
-			</p>
-		</Col>
-	</Row>
-{/await}
-
-<Row>
+<Row class="my-3">
 	<Col>
-		<!-- <Input type="text" placeholder="Search User" bind:value={search} on:input={getUserData} /> -->
-		<!-- <h2>See what other subreddits people comment on</h2> -->
-		<small
-			>tracking all data that originates from /r/h3h3productions + /r/h3snark + /r/Hasan_Piker + /r/Destiny +
-			/r/LivestreamFail</small
-		>
-		<Input
-			type="text"
-			placeholder="Search Subreddit"
-			name="subreddit_search"
-			bind:value={subredditSearch}
-			on:input={() => getSubredditData(subredditSearch)}
-		/>
-		<Row>
-			<Col>
-				<!-- svelte-ignore a11y_click_events_have_key_events -->
-				<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-				<!-- svelte-ignore event_directive_deprecated -->
-				{#if subredditSearch}
-					<!-- content here -->
-					<p
-						style="cursor: pointer;"
-						on:click={() => {
-							subredditSearch = '';
-							getSubredditData('');
-							// filteredSubreddits = [];
-						}}
-					>
-						clear
-					</p>
-				{/if}
-				<div style="max-height: 200px; overflow-y: auto;" class="bg-light p-2">
-					{#if subredditSearch.length}
-						<!-- content here -->
-						{#each filteredSubreddits as subreddit}
-							<!-- svelte-ignore a11y_click_events_have_key_events -->
-							<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-							<!-- svelte-ignore event_directive_deprecated -->
-							<p
-								style="cursor: pointer;"
-								on:click={() => {
-									getSubredditData(subreddit.name);
-									// getSubredditData(window.document.getElementsByName('subreddit_search')[0]);
-								}}
-							>
-								{subreddit.name}
-							</p>
-						{/each}
-					{/if}
-				</div>
-			</Col>
-		</Row>
-		<!-- <Input type="select">
-			{#each filteredSubreddits as subreddit}
-				<option value={subreddit.name}>{subreddit.name}</option>
-			{/each}
-		</Input> -->
+		<p>
+			<b>
+				<CountUp targetNumber={totalUsersCount} duration={5000} />
+			</b>
+			unique Reddit users<br />
+			<b>
+				<CountUp targetNumber={totalCommentsCount} duration={5000} />
+			</b>
+			individual comments<br />
+			<b>
+				<CountUp targetNumber={totalSubredditsCount} duration={5000} />
+			</b>
+			subreddits recorded<br />
+		</p>
 	</Col>
 </Row>
 
+<Row>
+	<Col>
+		<small>
+			Tracking all data that originates from /r/h3h3productions, /r/h3snark, /r/Hasan_Piker, /r/Destiny,
+			/r/LivestreamFail
+		</small>
+		<Input
+			type="text"
+			placeholder="Search Subreddit"
+			bind:value={subredditSearch}
+			on:input={handleSubredditSearchInput}
+		/>
+		{#if subredditSearch}
+			<p style="cursor: pointer;" on:click={clearSubredditSearch}>Clear</p>
+		{/if}
+		<div style="max-height: 200px; overflow-y: auto;" class="bg-light p-2">
+			{#if filteredSubreddits.length}
+				{#each filteredSubreddits as subreddit}
+					<p
+						style="cursor: pointer;"
+						on:click={() => {
+							subredditSearch = subreddit.name;
+							filteredSubreddits = [];
+							getSubredditData(subreddit.name);
+						}}
+					>
+						{subreddit.name}
+					</p>
+				{/each}
+			{/if}
+		</div>
+	</Col>
+</Row>
+
+{#if loading}
+	<Spinner size="lg" />
+{/if}
+
 {#if chartData.length && subredditSearch}
-	<!-- content here -->
-	<!-- <SubredditGraph data={chartData} /> -->
 	<BarChart
 		interactions={chartData}
 		subredditName={subredditSearch}
 		{commentCount}
 		authorsCount={subredditAuthors.length}
 	/>
-{/if}
-
-{#if chartData.length == 0 && !loading && subredditSearch}
+{:else if !loading && subredditSearch}
 	<p>Not enough data for {subredditSearch}</p>
-{/if}
-
-{#if loading}
-	<Spinner size="lg" />
-{/if}
-
-{#if results.length}
-	<Row>
-		<Col>
-			<h2>Results</h2>
-			<!-- {JSON.stringify(results)} -->
-			{#each results as result}
-				<div>
-					<h3>{result.subredditName}</h3>
-					<p>{result.content}</p>
-				</div>
-			{/each}
-		</Col>
-	</Row>
 {/if}

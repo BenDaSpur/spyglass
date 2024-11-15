@@ -57,7 +57,10 @@
 		},
 		subtitle: {
 			text:
-				commentCount.toLocaleString() + ' comments recorded from ' + authorsCount.toLocaleString() + ' unique users',
+				commentCount.toLocaleString() +
+				' comments recorded from ' +
+				authorsCount.toLocaleString() +
+				' unique users (excluding default subreddits)',
 			align: 'center'
 		}
 	};
