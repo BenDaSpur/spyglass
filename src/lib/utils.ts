@@ -1,4 +1,5 @@
 export const defaultSubreddits = [
+	'adviceanimals',
 	'announcements',
 	'Art',
 	'AskReddit',
@@ -55,5 +56,6 @@ export const defaultSubreddits = [
 	'UpliftingNews',
 	'videos',
 	'worldnews',
+	'wtf',
 	'WritingPrompts'
 ];

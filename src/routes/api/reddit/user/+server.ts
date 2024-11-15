@@ -6,7 +6,7 @@ export async function GET({ url }) {
 	const username = url.searchParams.get('username');
 
 	if (!username) {
-		return json({ error: 'Username is required' }, { status: 400 });
+		return json(await prisma.user.findMany());
 	}
 	const user = await prisma.user.findFirstOrThrow({
 		where: {

@@ -5,17 +5,17 @@
 	import CountUp from '$lib/components/CountUp.svelte';
 
 	let search = '';
-	let subredditSearch = '';
-	let results = [];
-	let chartData = [];
-	let subreddits = [];
-	let filteredSubreddits = [];
-	let loading = false;
-	let commentCount = 0;
-	let subredditAuthors = [];
-	let totalUsersCount = 0;
-	let totalCommentsCount = 0;
-	let totalSubredditsCount = 0;
+	let subredditSearch = $state('');
+	let results = $state([]);
+	let chartData = $state([]);
+	let subreddits = $state([]);
+	let filteredSubreddits = $state([]);
+	let loading = $state(false);
+	let commentCount = $state(0);
+	let subredditAuthors = $state([]);
+	let totalUsersCount = $state(0);
+	let totalCommentsCount = $state(0);
+	let totalSubredditsCount = $state(0);
 
 	let timeout;
 
@@ -149,11 +149,17 @@
 			on:input={handleSubredditSearchInput}
 		/>
 		{#if subredditSearch}
+			<!-- svelte-ignore a11y_click_events_have_key_events -->
+			<!-- svelte-ignore event_directive_deprecated -->
+			<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 			<p style="cursor: pointer;" on:click={clearSubredditSearch}>Clear</p>
 		{/if}
 		<div style="max-height: 200px; overflow-y: auto;" class="bg-light p-2">
 			{#if filteredSubreddits.length}
 				{#each filteredSubreddits as subreddit}
+					<!-- svelte-ignore a11y_click_events_have_key_events -->
+					<!-- svelte-ignore event_directive_deprecated -->
+					<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 					<p
 						style="cursor: pointer;"
 						on:click={() => {
