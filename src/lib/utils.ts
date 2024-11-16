@@ -1,3 +1,8 @@
+export const epochToPsql = (epoch: number | string) => {
+	const epochNumber = typeof epoch === 'string' ? parseInt(epoch) : epoch;
+	const theDate = new Date(epochNumber * 1000).toISOString();
+	return theDate.slice(0, 19).replace('T', ' ');
+};
 export const defaultSubreddits = [
 	'adviceanimals',
 	'announcements',

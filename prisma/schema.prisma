@@ -40,6 +40,7 @@ model Comment {
     content       String
     bodyHtml      String
     permalink     String
+    commentDate   DateTime?
     createdAt     DateTime  @default(now())
     author        User      @relation(fields: [authorName], references: [username])
     authorName    String
