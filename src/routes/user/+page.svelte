@@ -1,76 +1,132 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { Row, Col, Input, Spinner } from '@sveltestrap/sveltestrap';
-	import { writable } from 'svelte/store';
+	import Accordion from '$lib/components/Accordion.svelte';
 
-	let userNameInput = writable('');
-	let user = writable({});
-	let allUsers = writable([]);
-	let sortedSubreddits = writable([]);
-	let isLoading = writable(false);
+	type User = {
+		username: string;
+		comments: Comment[];
+		posts: Post[];
+	};
 
-	// Debounce setup
-	let debounceTimeout;
+	type Post = {
+		id: string;
+		title: string;
+		content: string;
+		authorId: string;
+		subredditName: string;
+		permalink: string;
+	};
+
+	type Comment = {
+		id: string;
+		authorName: string;
+		content: string;
+		subredditName: string;
+		commentDate: string;
+		permalink: string;
+		bodyHtml: string;
+	};
+
+	let debounceTimeout: ReturnType<typeof setTimeout>;
 	const debounceDelay = 1000;
 
-	// Fetch all users
+	let userInput = ''; // Initialize as an empty string
+	let singleUser: User | null = null; // Initialize as null
+	let accordionData: {
+		subredditName: string;
+		comments: Comment[];
+	}[] = []; // Initialize as an empty array
+	let allUsers: User[] = [];
+	let isLoading = false;
+
+	// Fetch all users on mount
 	onMount(async () => {
-		const response = await fetch(`/api/reddit/user`);
-		allUsers.set(await response.json());
+		allUsers = await getAllUsers();
 	});
 
+	async function getAllUsers() {
+		const response = await fetch(`/api/reddit/user`);
+		return await response.json();
+	}
+
 	// Debounced function to fetch user data
-	function getUserHistory() {
+	function getUserHistory(theuser: string) {
+		userInput = theuser;
 		clearTimeout(debounceTimeout);
 		debounceTimeout = setTimeout(async () => {
-			const inputValue = $userNameInput;
+			const inputValue = theuser.trim();
 			if (!inputValue) {
-				user.set({});
-				sortedSubreddits.set([]);
+				singleUser = null;
+				accordionData = [];
 				return;
 			}
-			isLoading.set(true);
+			isLoading = true;
 
-			const response = await fetch(`/api/reddit/user?username=${inputValue}`);
-			const fetchedUser = await response.json();
-			user.set(fetchedUser);
-
-			if (fetchedUser.username) {
-				// Generate sorted subreddits by count
-				const subredditCounts = fetchedUser.comments.reduce((acc, comment) => {
-					acc[comment.subredditName] = (acc[comment.subredditName] || 0) + 1;
-					return acc;
-				}, {});
-
-				const sorted = Object.entries(subredditCounts)
-					.map(([subredditName, count]) => ({
-						subredditName,
-						count
-					}))
-					.sort((a, b) => b.count - a.count);
-
-				sortedSubreddits.set(sorted);
+			try {
+				const response = await fetch(`/api/reddit/user?username=${inputValue}`);
+				const data = await response.json();
+				singleUser = data;
+				accordionData = formatAccordionData(singleUser);
+			} catch (error) {
+				console.error(error);
+				singleUser = null;
+				accordionData = [];
+			} finally {
+				isLoading = false;
 			}
-			isLoading.set(false);
 		}, debounceDelay);
 	}
 
-	// Auto-trigger user history when input changes
-	$: $userNameInput, getUserHistory();
+	function formatAccordionData(user: User) {
+		if (!user || !user.comments) {
+			return [];
+		}
+
+		const subreddits = user.comments.reduce(
+			(acc, comment) => {
+				const existingSubreddit = acc.find((sub) => sub.subredditName === comment.subredditName);
+				if (existingSubreddit) {
+					existingSubreddit.comments.push(comment);
+				} else {
+					acc.push({
+						subredditName: comment.subredditName,
+						comments: [comment]
+					});
+				}
+				return acc;
+			},
+			[] as { subredditName: string; comments: Comment[] }[]
+		);
+
+		// Sort subreddits by the number of comments, from biggest to smallest
+		subreddits.sort((a, b) => b.comments.length - a.comments.length);
+
+		// Sort comments by commentDate within each subreddit
+		subreddits.forEach((subreddit) => {
+			subreddit.comments.sort((a, b) => new Date(a.commentDate).getTime() - new Date(b.commentDate).getTime());
+		});
+
+		return subreddits;
+	}
 </script>
 
 <Row>
 	<Col>
-		<Input bind:value={$userNameInput} placeholder="Enter a Reddit username" on:input={() => getUserHistory()} />
-		{#if $userNameInput}
+		<input
+			class="form-control"
+			bind:value={userInput}
+			placeholder="Enter a Reddit username"
+			on:input={() => getUserHistory(userInput)}
+		/>
+		{#if userInput.length}
 			<small>
-				<!-- Showing results for: {$userNameInput} -->
-				<a href="#" on:click={() => ($userNameInput = '')}>Clear</a>
+				<a href="#" on:click={() => getUserHistory('')}>clear</a>
 			</small>
 			<ul style="max-height: 200px; overflow-y: auto;" class="bg-light">
-				{#each $allUsers.filter((u) => u.username.toLowerCase().includes($userNameInput.toLowerCase())) as filteredUser}
+				{#each allUsers.filter((u) => u.username.toLowerCase().includes(userInput.toLowerCase())) as filteredUser}
 					<li>
-						<a href="#" on:click={() => ($userNameInput = filteredUser.username)}>
+						<a href="#" on:click={() => getUserHistory(filteredUser.username)}>
 							{filteredUser.username}
 						</a>
 					</li>
@@ -80,60 +136,30 @@
 	</Col>
 </Row>
 
-{#if $isLoading}
+{#if isLoading}
 	<Spinner size="lg" />
 {/if}
 
-{#if Object.keys($user).length}
+{#if singleUser}
 	<Row>
 		<Col>
-			<h2>{$user.username}</h2>
-			<p>{$user.comments.length} comments</p>
-			<p>{$user.posts.length} posts</p>
-
-			{#if $sortedSubreddits.length}
-				<div class="accordion" id="accordionExample">
-					{#each $sortedSubreddits as subreddit, i}
-						<div class="accordion-item">
-							<h2 class="accordion-header">
-								<button
-									class="accordion-button"
-									type="button"
-									data-bs-toggle="collapse"
-									data-bs-target="#collapse{i}"
-									aria-expanded="true"
-									aria-controls="collapse{i}"
-								>
-									{subreddit.subredditName} ({subreddit.count})
-								</button>
-							</h2>
-							<div id="collapse{i}" class="accordion-collapse collapse show" data-bs-parent="#accordionExample">
-								<div class="accordion-body">
-									{#each $user.comments as comment}
-										{#if comment.subredditName === subreddit.subredditName}
-											<p>
-												{comment.content}
-												<small
-													><a
-														href="https://reddit.com{comment.permalink.split('/').slice(0, -2).join('/')}"
-														target="_blank">source</a
-													></small
-												>
-											</p>
-										{/if}
-									{/each}
-								</div>
-							</div>
-						</div>
-					{/each}
-				</div>
-			{/if}
+			<h2>{singleUser.username}</h2>
+			<p>{singleUser.comments?.length || 0} comments</p>
+			<p>{singleUser.posts?.length || 0} posts</p>
+		</Col>
+		<Col>
+			<select>
+				<option value="">Sort by: Top</option>
+				<option value="">Sort by: Newest</option>
+				{#each accordionData as { subredditName }}
+					<option value={subredditName}>{subredditName}</option>
+				{/each}
+			</select>
 		</Col>
 	</Row>
+	<Row>
+		{#if accordionData.length}
+			<Accordion subreddits={accordionData} />
+		{/if}
+	</Row>
 {/if}
-
-<style>
-	.accordion-body p {
-		border-bottom: 1px solid #ccc;
-	}
-</style>

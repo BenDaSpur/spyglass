@@ -12,6 +12,7 @@ model User {
     updatedAt DateTime  @updatedAt
     posts     Post[]
     comments  Comment[]
+    isDeleted Boolean   @default(false)
 }
 
 model Subreddit {

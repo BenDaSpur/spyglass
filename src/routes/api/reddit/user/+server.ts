@@ -16,7 +16,7 @@ export async function GET({ url }) {
 	}
 
 	const lowercaseUsername = username.toLowerCase();
-
+	// await redis.del(`users:${lowercaseUsername}`);
 	if (await redis.get(`users:${lowercaseUsername}`)) {
 		console.log('Cache hit users:', lowercaseUsername);
 		return json(await redis.get(`users:${lowercaseUsername}`));
@@ -29,18 +29,16 @@ export async function GET({ url }) {
 				}
 			},
 			include: {
-				posts: {
-					select: {
-						title: true,
-						subredditName: true,
-						permalink: true
-					}
-				},
+				posts: true,
 				comments: {
 					select: {
+						id: true,
+						authorName: true,
 						content: true,
 						subredditName: true,
-						permalink: true
+						commentDate: true,
+						permalink: true,
+						bodyHtml: true
 					}
 				}
 			}
@@ -49,7 +47,11 @@ export async function GET({ url }) {
 		if (!user) {
 			return json({ error: 'User not found' }, { status: 404 });
 		}
-		await redis.set(`users:${lowercaseUsername}`, JSON.stringify(user));
+		const userData = JSON.stringify(user);
+		if (userData.length <= 512000) {
+			// 500 KB limit
+			await redis.set(`users:${lowercaseUsername}`, userData);
+		}
 
 		return json(user);
 	}
