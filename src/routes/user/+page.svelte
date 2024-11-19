@@ -39,6 +39,7 @@
 	}[] = []; // Initialize as an empty array
 	let allUsers: User[] = [];
 	let isLoading = false;
+	let viewMostPopular = true;
 
 	// Fetch all users on mount
 	onMount(async () => {
@@ -143,23 +144,49 @@
 {#if singleUser}
 	<Row>
 		<Col>
-			<h2>{singleUser.username}</h2>
+			<h2>
+				<a target="_blank" href="https://reddit.com/u/{singleUser.username}">
+					{singleUser.username}
+				</a>
+			</h2>
 			<p>{singleUser.comments?.length || 0} comments</p>
 			<p>{singleUser.posts?.length || 0} posts</p>
 		</Col>
 		<Col>
-			<select>
-				<option value="">Sort by: Top</option>
-				<option value="">Sort by: Newest</option>
-				{#each accordionData as { subredditName }}
-					<option value={subredditName}>{subredditName}</option>
-				{/each}
+			<select on:change={(event) => (viewMostPopular = event.target.value === 'top')}>
+				<option value="top">Sort by: Top</option>
+				<option value="newest">Sort by: Newest</option>
 			</select>
 		</Col>
 	</Row>
 	<Row>
 		{#if accordionData.length}
-			<Accordion subreddits={accordionData} />
+			<Col>
+				{#if viewMostPopular}
+					<Accordion subreddits={accordionData} />
+				{:else}
+					{#each singleUser.comments.sort((a, b) => new Date(b.commentDate).getTime() - new Date(a.commentDate).getTime()) as comment}
+						<Row class="border-bottom">
+							<Col xs={2}>
+								<a target="_blank" href="https://reddit.com/r/{comment.subredditName}">{comment.subredditName}</a>
+								<br />
+								<small>{new Date(comment.commentDate).toLocaleString()}</small>
+								<br />
+								<small>
+									<a target="_blank" href="https://reddit.com{comment.permalink.split('/').slice(0, -2).join('/')}"
+										>source</a
+									>
+								</small>
+							</Col>
+							<Col xs={10}>
+								<p>
+									{comment.content}
+								</p>
+							</Col>
+						</Row>
+					{/each}
+				{/if}
+			</Col>
 		{/if}
 	</Row>
 {/if}

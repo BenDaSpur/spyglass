@@ -16,6 +16,7 @@
 	let totalUsersCount = $state(0);
 	let totalCommentsCount = $state(0);
 	let totalSubredditsCount = $state(0);
+	let topSubredditUsers = $state([]);
 
 	let timeout;
 
@@ -72,10 +73,27 @@
 
 			const chartJson = await interactionsResponse.json();
 			chartData = chartJson.sort((a, b) => b.subreddit - a.subreddit);
+			await getSubredditTopUsers(searchedSubreddit);
 		} catch (error) {
 			console.error('Error fetching subreddit data:', error);
 		} finally {
 			loading = false;
+		}
+	}
+
+	async function getSubredditTopUsers(searchedSubreddit) {
+		if (!searchedSubreddit) {
+			return;
+		}
+		// loading = true;
+		try {
+			const response = await fetch(`/api/reddit/subreddit/users?subreddit=${encodeURIComponent(searchedSubreddit)}`);
+			const data = await response.json();
+			topSubredditUsers = data;
+		} catch (error) {
+			console.error('Error fetching subreddit top users:', error);
+		} finally {
+			// loading = false;
 		}
 	}
 
@@ -86,6 +104,7 @@
 		chartData = [];
 		commentCount = 0;
 		subredditAuthors = [];
+		topSubredditUsers = [];
 	}
 
 	// Function to get overall stats
@@ -231,4 +250,18 @@
 	/>
 {:else if !loading && subredditSearch}
 	<p>Not enough data for {subredditSearch}</p>
+{/if}
+
+{#if topSubredditUsers.length}
+	<h2>Top commenters in {subredditSearch}</h2>
+	<ul>
+		{#each topSubredditUsers as user}
+			<li>
+				<a href={`https://reddit.com/u/${user.authorName}`} target="_blank">
+					{user.authorName}
+				</a>
+				<small>{user.commentCount}</small>
+			</li>
+		{/each}
+	</ul>
 {/if}
