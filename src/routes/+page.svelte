@@ -17,6 +17,8 @@
 	let totalCommentsCount = $state(0);
 	let totalSubredditsCount = $state(0);
 	let topSubredditUsers = $state([]);
+	let dateFrom = $state(new Date(0).toISOString().split('T')[0]);
+	let dateTo = $state(new Date().toISOString().split('T')[0]);
 
 	let timeout;
 
@@ -64,7 +66,9 @@
 		try {
 			const [commentCountResponse, interactionsResponse] = await Promise.all([
 				fetch(`/api/reddit/subreddit/count?search=${encodeURIComponent(searchedSubreddit)}`),
-				fetch(`/api/reddit/subreddit/interactions?subreddit=${encodeURIComponent(searchedSubreddit)}`)
+				fetch(
+					`/api/reddit/subreddit/interactions?subreddit=${encodeURIComponent(searchedSubreddit)}&dateFrom=${new Date(dateFrom).toISOString()}&dateTo=${new Date(dateTo).toISOString()}`
+				)
 			]);
 
 			const commentCountJson = await commentCountResponse.json();
@@ -153,11 +157,6 @@
 			</b>
 			subreddits recorded<br />
 		</p>
-	</Col>
-</Row>
-
-<Row>
-	<Col>
 		<small>
 			Tracking all data that originates from /r/<a
 				href="#"
@@ -202,6 +201,43 @@
 				LivestreamFail
 			</a>
 		</small>
+	</Col>
+</Row>
+
+<Row class="mb-3">
+	<Col md={8}>
+		<div class="d-flex">
+			<div class="d-flex flex-column">
+				<div class="input-group">
+					<span class="input-group-text">From</span>
+					<input
+						bind:value={dateFrom}
+						oninput={(ev) => {
+							dateFrom = ev.currentTarget.value;
+							getSubredditData(subredditSearch);
+						}}
+						type="date"
+						class="form-control"
+						aria-label="From"
+					/>
+					<span class="input-group-text">To</span>
+					<input
+						bind:value={dateTo}
+						oninput={(ev) => {
+							dateTo = ev.currentTarget.value;
+							getSubredditData(subredditSearch);
+						}}
+						type="date"
+						class="form-control"
+						aria-label="To"
+					/>
+				</div>
+			</div>
+		</div>
+	</Col>
+</Row>
+<Row>
+	<Col md={8}>
 		<input
 			class="form-control"
 			type="text"
@@ -247,6 +283,8 @@
 		subredditName={subredditSearch}
 		{commentCount}
 		authorsCount={subredditAuthors.length}
+		fromDate={dateFrom}
+		toDate={dateTo}
 	/>
 {:else if !loading && subredditSearch}
 	<p>Not enough data for {subredditSearch}</p>

@@ -7,12 +7,21 @@
 	export let subredditName = '';
 	export let commentCount = 0;
 	export let authorsCount = 0;
+	export let fromDate = '';
+	export let toDate = '';
+
 	let filterOut = false;
 	let filteredSubreddits = interactions.filter(
 		(i) => !defaultSubreddits.map((sub) => sub.toLowerCase()).includes(i.subreddit.toLowerCase())
 	);
 
 	console.log('interactions', interactions);
+
+	const subtitleText = `
+		${commentCount.toLocaleString()} comments recorded from ${authorsCount.toLocaleString()} unique users 
+		${!fromDate.includes('1970-01-01') ? 'from ' + fromDate : ''} 
+		${!toDate.includes(new Date().toISOString().split('T')[0]) ? 'to ' + toDate : ''}
+	`;
 
 	let chartOptions = {
 		chart: {
@@ -32,8 +41,7 @@
 			align: 'center'
 		},
 		subtitle: {
-			text:
-				commentCount.toLocaleString() + ' comments recorded from ' + authorsCount.toLocaleString() + ' unique users',
+			text: subtitleText,
 			align: 'center'
 		}
 	};
@@ -56,11 +64,7 @@
 			align: 'center'
 		},
 		subtitle: {
-			text:
-				commentCount.toLocaleString() +
-				' comments recorded from ' +
-				authorsCount.toLocaleString() +
-				' unique users (excluding default subreddits)',
+			text: subtitleText + ' (excluding default subreddits)',
 			align: 'center'
 		}
 	};
