@@ -11,7 +11,7 @@ export async function GET({ url }) {
 	if (!id) {
 		return json({ error: 'ID is required' }, { status: 400 });
 	}
-	const theComment = await prisma.comment.findFirstOrThrow({
+	const theComment = await prisma.comment.findFirst({
 		where: {
 			id
 		}

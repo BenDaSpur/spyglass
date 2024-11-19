@@ -42,9 +42,9 @@ export default async function run() {
 						for (const userComment of userInfo.comments) {
 							userCommentCount = userCommentCount + 1;
 							const isAlreadyInserted = await getCommentById(userComment.id);
-							if (isAlreadyInserted.length === 0) {
+							if (!isAlreadyInserted) {
 								console.log(
-									`////// ${subreddit.name} \\\\\ userComments ${userCommentCount} OF ${userInfo.comments.length} \\\\\\  postComment ${postCommentsCount} OF ${comments.length}`
+									`////// ${subreddit.name} \\\\ userComments ${userCommentCount} OF ${userInfo.comments.length} \\\\\\  postComment ${postCommentsCount} OF ${comments.length}`
 								);
 								await upsertSubreddit(
 									userComment.subreddit.display_name,
@@ -178,13 +178,16 @@ const upsertPost = async (submission: Submission) => {
 };
 
 const upsertComment = async (comment: Comment) => {
+	const theComment = comment;
+
+	theComment.commentDate = comment.created_utc;
 	const response = await axios(`${baseUrl}/api/reddit/comment`, {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',
 			'x-spyglass-key': SPYGLASS_SAFETY_KEY
 		},
-		data: JSON.stringify(comment)
+		data: JSON.stringify(theComment)
 	});
 
 	const commentData = await response.data;
