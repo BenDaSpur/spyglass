@@ -257,7 +257,7 @@
 	<ul>
 		{#each topSubredditUsers as user}
 			<li>
-				<a href={`https://reddit.com/u/${user.authorName}`} target="_blank">
+				<a href={`/user?name=${user.authorName}`} target="_blank">
 					{user.authorName}
 				</a>
 				<small>{user.commentCount}</small>

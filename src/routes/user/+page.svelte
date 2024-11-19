@@ -31,7 +31,7 @@
 	let debounceTimeout: ReturnType<typeof setTimeout>;
 	const debounceDelay = 1000;
 
-	let userInput = ''; // Initialize as an empty string
+	let userInput = '';
 	let singleUser: User | null = null; // Initialize as null
 	let accordionData: {
 		subredditName: string;
@@ -43,6 +43,10 @@
 
 	// Fetch all users on mount
 	onMount(async () => {
+		userInput = new URLSearchParams(location.search).get('name') || '';
+		if (userInput) {
+			getUserHistory(userInput);
+		}
 		allUsers = await getAllUsers();
 	});
 
@@ -153,7 +157,7 @@
 			<p>{singleUser.posts?.length || 0} posts</p>
 		</Col>
 		<Col>
-			<select on:change={(event) => (viewMostPopular = event.target.value === 'top')}>
+			<select class="form-control" on:change={(event) => (viewMostPopular = event.target.value === 'top')}>
 				<option value="top">Sort by: Top</option>
 				<option value="newest">Sort by: Newest</option>
 			</select>
