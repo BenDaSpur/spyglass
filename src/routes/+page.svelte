@@ -124,6 +124,20 @@
 		}
 	}
 
+	async function setDates(whatDates: string) {
+		if (whatDates === 'full') {
+			dateFrom = new Date(0).toISOString().split('T')[0];
+			dateTo = new Date().toISOString().split('T')[0];
+		} else if (whatDates === 'pre') {
+			dateFrom = new Date(0).toISOString().split('T')[0];
+			dateTo = new Date('2023-10-07').toISOString().split('T')[0];
+		} else if (whatDates === 'post') {
+			dateFrom = new Date('2023-10-08').toISOString().split('T')[0];
+			dateTo = new Date().toISOString().split('T')[0];
+		}
+		await getSubredditData(subredditSearch);
+	}
+
 	onMount(async () => {
 		await getStats();
 		const interval = setInterval(async () => {
@@ -206,45 +220,49 @@
 
 <Row class="mb-3">
 	<Col md={8}>
-		<div class="d-flex">
-			<div class="d-flex flex-column">
-				<div class="input-group">
-					<span class="input-group-text">From</span>
-					<input
-						bind:value={dateFrom}
-						oninput={(ev) => {
-							dateFrom = ev.currentTarget.value;
-							getSubredditData(subredditSearch);
-						}}
-						type="date"
-						class="form-control"
-						aria-label="From"
-					/>
-					<span class="input-group-text">To</span>
-					<input
-						bind:value={dateTo}
-						oninput={(ev) => {
-							dateTo = ev.currentTarget.value;
-							getSubredditData(subredditSearch);
-						}}
-						type="date"
-						class="form-control"
-						aria-label="To"
-					/>
-				</div>
-			</div>
+		<div class="input-group">
+			<span class="input-group-text">From</span>
+			<input
+				bind:value={dateFrom}
+				oninput={(ev) => {
+					dateFrom = ev.currentTarget.value;
+					getSubredditData(subredditSearch);
+				}}
+				type="date"
+				class="form-control"
+				aria-label="From"
+			/>
+			<span class="input-group-text">To</span>
+			<input
+				bind:value={dateTo}
+				oninput={(ev) => {
+					dateTo = ev.currentTarget.value;
+					getSubredditData(subredditSearch);
+				}}
+				type="date"
+				class="form-control"
+				aria-label="To"
+			/>
+		</div>
+		<div class="btn-group">
+			<a href="#" class="btn btn-primary" onclick={() => setDates('full')}>Full Date Range</a>
+			<a href="#" class="btn btn-success" onclick={() => setDates('pre')}>Pre Oct 7th</a>
+			<a href="#" class="btn btn-warning" onclick={() => setDates('post')}>Post Oct 7th</a>
 		</div>
 	</Col>
 </Row>
 <Row>
 	<Col md={8}>
-		<input
-			class="form-control"
-			type="text"
-			placeholder="Search Subreddit"
-			bind:value={subredditSearch}
-			oninput={handleSubredditSearchInput}
-		/>
+		<div class="input-group">
+			<span class="input-group-text">/r/</span>
+			<input
+				class="form-control"
+				type="text"
+				placeholder="Search Subreddit"
+				bind:value={subredditSearch}
+				oninput={handleSubredditSearchInput}
+			/>
+		</div>
 		{#if subredditSearch}
 			<!-- svelte-ignore a11y_click_events_have_key_events -->
 			<!-- svelte-ignore event_directive_deprecated -->

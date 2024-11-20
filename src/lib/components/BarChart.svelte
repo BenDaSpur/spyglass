@@ -37,7 +37,7 @@
 			}
 		],
 		title: {
-			text: 'Top Interactions for /r/' + subredditName,
+			text: 'Top Interactions for /r/' + subredditName + ' (via redditspyglass.com)',
 			align: 'center'
 		},
 		subtitle: {
@@ -60,7 +60,7 @@
 			}
 		],
 		title: {
-			text: 'Top Interactions for /r/' + subredditName,
+			text: 'Top Interactions for /r/' + subredditName + ' (via redditspyglass.com)',
 			align: 'center'
 		},
 		subtitle: {
