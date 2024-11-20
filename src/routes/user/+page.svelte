@@ -116,6 +116,11 @@
 	}
 </script>
 
+<svelte:head>
+	<title>Spyglass: Search Users</title>
+	<meta name="description" content="Search Reddit Users" />
+</svelte:head>
+
 <Row>
 	<Col>
 		<input

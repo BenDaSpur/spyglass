@@ -159,15 +159,15 @@
 	<Col>
 		<p>
 			<b>
-				<CountUp targetNumber={totalUsersCount} duration={5000} />
+				<CountUp targetNumber={totalUsersCount} />
 			</b>
 			unique Reddit users<br />
 			<b>
-				<CountUp targetNumber={totalCommentsCount} duration={5000} />
+				<CountUp targetNumber={totalCommentsCount} />
 			</b>
 			individual comments<br />
 			<b>
-				<CountUp targetNumber={totalSubredditsCount} duration={5000} />
+				<CountUp targetNumber={totalSubredditsCount} />
 			</b>
 			subreddits recorded<br />
 		</p>
