@@ -302,7 +302,10 @@
 </Row>
 
 {#if loading}
-	<Spinner size="lg" />
+	<div>
+		<Spinner size="lg" />
+		<p class="mt-2 text-muted">Loading data, this can take up to 10 seconds...</p>
+	</div>
 {/if}
 
 {#if chartData.length && subredditSearch}
