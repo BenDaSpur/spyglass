@@ -65,7 +65,9 @@
 		loading = true;
 		try {
 			const [commentCountResponse, interactionsResponse] = await Promise.all([
-				fetch(`/api/reddit/subreddit/count?search=${encodeURIComponent(searchedSubreddit)}`),
+				fetch(
+					`/api/reddit/subreddit/count?search=${encodeURIComponent(searchedSubreddit)}&dateFrom=${new Date(dateFrom).toISOString()}&dateTo=${new Date(dateTo).toISOString()}`
+				),
 				fetch(
 					`/api/reddit/subreddit/interactions?subreddit=${encodeURIComponent(searchedSubreddit)}&dateFrom=${new Date(dateFrom).toISOString()}&dateTo=${new Date(dateTo).toISOString()}`
 				)
