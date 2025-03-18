@@ -10,7 +10,7 @@
 	export let fromDate = '';
 	export let toDate = '';
 
-	let filterOut = false;
+	let filterOut = true;
 	let filteredSubreddits = interactions.filter(
 		(i) => !defaultSubreddits.map((sub) => sub.toLowerCase()).includes(i.subreddit.toLowerCase())
 	);

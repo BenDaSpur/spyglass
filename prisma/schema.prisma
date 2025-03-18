@@ -8,7 +8,7 @@ generator client {
 }
 
 model User {
-    username  String    @unique
+    username  String    @id @unique
     updatedAt DateTime  @updatedAt
     posts     Post[]
     comments  Comment[]
@@ -16,7 +16,7 @@ model User {
 }
 
 model Subreddit {
-    name        String    @unique
+    name        String    @id @unique
     description String?
     tracking    Boolean   @default(false)
     posts       Post[]
@@ -33,7 +33,10 @@ model Post {
     authorId      String
     subreddit     Subreddit @relation(fields: [subredditName], references: [name])
     subredditName String
-    permalink     String
+
+    @@index([authorId])
+    @@index([subredditName])
+    @@index([createdAt])
 }
 
 model Comment {
@@ -48,5 +51,8 @@ model Comment {
     subreddit     Subreddit @relation(fields: [subredditName], references: [name])
     subredditName String
 
+    @@index([authorName])
+    @@index([subredditName])
     @@index([authorName, subredditName])
+    @@index([createdAt])
 }

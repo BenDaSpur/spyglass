@@ -138,8 +138,10 @@
 		await getSubredditData(subredditSearch);
 	}
 
-	onMount(async () => {
-		await getStats();
+	onMount(() => {
+		subredditSearch = 'h3h3productions';
+		getSubredditData('h3h3productions');
+		getStats();
 		const interval = setInterval(async () => {
 			await getStats();
 		}, 3600000);
@@ -213,6 +215,14 @@
 				}}
 			>
 				LivestreamFail
+			</a>, /r/<a
+				href="#"
+				onclick={() => {
+					subredditSearch = 'LeftoversH3';
+					getSubredditData('LeftoversH3');
+				}}
+			>
+				LeftoversH3
 			</a>
 		</small>
 	</Col>
