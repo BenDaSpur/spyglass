@@ -36,6 +36,7 @@ export const defaultSubreddits = [
 	'LifeProTips',
 	'listentothis',
 	'MadeMeSmile',
+	'mildlyinfuriating',
 	'mildlyinteresting',
 	'movies',
 	'Music',
