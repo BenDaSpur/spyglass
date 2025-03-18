@@ -33,6 +33,7 @@ model Post {
     authorId      String
     subreddit     Subreddit @relation(fields: [subredditName], references: [name])
     subredditName String
+    permalink     String
 
     @@index([authorId])
     @@index([subredditName])
