@@ -4,33 +4,45 @@
 	import BarChart from '$lib/components/BarChart.svelte';
 	import CountUp from '$lib/components/CountUp.svelte';
 
-	let search = '';
+	interface Subreddit {
+		name: string;
+	}
+
+	interface User {
+		authorName: string;
+		commentCount: number;
+	}
+
+	interface ChartDataItem {
+		subreddit: number;
+	}
+
 	let subredditSearch = $state('');
-	let results = $state([]);
-	let chartData = $state([]);
-	let subreddits = $state([]);
-	let filteredSubreddits = $state([]);
+	let chartData = $state<ChartDataItem[]>([]);
+	let filteredSubreddits = $state<Subreddit[]>([]);
 	let loading = $state(false);
 	let commentCount = $state(0);
-	let subredditAuthors = $state([]);
+	let subredditAuthors = $state<string[]>([]);
 	let totalUsersCount = $state(0);
 	let totalCommentsCount = $state(0);
 	let totalSubredditsCount = $state(0);
-	let topSubredditUsers = $state([]);
+	let topSubredditUsers = $state<User[]>([]);
 	let dateFrom = $state(new Date(0).toISOString().split('T')[0]);
 	let dateTo = $state(new Date().toISOString().split('T')[0]);
+	let selectedDateRange = $state('full');
+	let errorMessage = $state('');
 
-	let timeout;
+	let timeout: ReturnType<typeof setTimeout>;
 
 	// Debounce function to delay execution
-	function debounce(func, delay) {
+	function debounce(func: () => void, delay: number) {
 		clearTimeout(timeout);
 		timeout = setTimeout(func, delay);
 	}
 
 	// Function to handle input changes in the subreddit search field
-	function handleSubredditSearchInput(event) {
-		const searchTerm = event.target.value.trim();
+	function handleSubredditSearchInput(event: Event) {
+		const searchTerm = (event.target as HTMLInputElement).value.trim();
 		subredditSearch = searchTerm;
 		searchFilteredSubreddits(searchTerm);
 		debounce(() => {
@@ -39,25 +51,33 @@
 	}
 
 	// Function to fetch filtered subreddits based on the search input
-	async function searchFilteredSubreddits(searchTerm) {
+	async function searchFilteredSubreddits(searchTerm: string) {
 		if (!searchTerm) {
 			filteredSubreddits = [];
 			return;
 		}
 		try {
 			const response = await fetch(`/api/reddit/subreddit?search=${encodeURIComponent(searchTerm)}`);
+			if (!response.ok) {
+				throw new Error(`HTTP error! status: ${response.status}`);
+			}
 			const data = await response.json();
 			filteredSubreddits = data;
+			errorMessage = '';
 		} catch (error) {
 			console.error('Error fetching filtered subreddits:', error);
+			errorMessage = 'Failed to fetch subreddit list. Please try again.';
+			filteredSubreddits = [];
 		}
 	}
 
 	// Function to fetch subreddit data
-	async function getSubredditData(searchedSubreddit) {
+	async function getSubredditData(searchedSubreddit: string) {
 		chartData = [];
 		commentCount = 0;
 		subredditAuthors = [];
+		topSubredditUsers = [];
+		errorMessage = '';
 
 		if (!searchedSubreddit) {
 			return;
@@ -73,33 +93,39 @@
 				)
 			]);
 
+			if (!commentCountResponse.ok || !interactionsResponse.ok) {
+				throw new Error('One or more API requests failed');
+			}
+
 			const commentCountJson = await commentCountResponse.json();
 			commentCount = commentCountJson.comments;
 			subredditAuthors = commentCountJson.authors;
 
 			const chartJson = await interactionsResponse.json();
-			chartData = chartJson.sort((a, b) => b.subreddit - a.subreddit);
+			chartData = chartJson.sort((a: ChartDataItem, b: ChartDataItem) => b.subreddit - a.subreddit);
 			await getSubredditTopUsers(searchedSubreddit);
 		} catch (error) {
 			console.error('Error fetching subreddit data:', error);
+			errorMessage = 'Failed to load subreddit data. Please try again.';
 		} finally {
 			loading = false;
 		}
 	}
 
-	async function getSubredditTopUsers(searchedSubreddit) {
+	async function getSubredditTopUsers(searchedSubreddit: string) {
 		if (!searchedSubreddit) {
 			return;
 		}
-		// loading = true;
 		try {
 			const response = await fetch(`/api/reddit/subreddit/users?subreddit=${encodeURIComponent(searchedSubreddit)}`);
+			if (!response.ok) {
+				throw new Error(`HTTP error! status: ${response.status}`);
+			}
 			const data = await response.json();
 			topSubredditUsers = data;
 		} catch (error) {
 			console.error('Error fetching subreddit top users:', error);
-		} finally {
-			// loading = false;
+			errorMessage = 'Failed to load top users. Please try again.';
 		}
 	}
 
@@ -111,12 +137,16 @@
 		commentCount = 0;
 		subredditAuthors = [];
 		topSubredditUsers = [];
+		errorMessage = '';
 	}
 
 	// Function to get overall stats
 	async function getStats() {
 		try {
 			const response = await fetch('/api/reddit/stats');
+			if (!response.ok) {
+				throw new Error(`HTTP error! status: ${response.status}`);
+			}
 			const data = await response.json();
 			totalUsersCount = data.users;
 			totalCommentsCount = data.comments;
@@ -127,6 +157,8 @@
 	}
 
 	async function setDates(whatDates: string) {
+		selectedDateRange = whatDates;
+
 		if (whatDates === 'full') {
 			dateFrom = new Date(0).toISOString().split('T')[0];
 			dateTo = new Date().toISOString().split('T')[0];
@@ -138,6 +170,9 @@
 			dateTo = new Date().toISOString().split('T')[0];
 		} else if (whatDates === 'month') {
 			dateFrom = new Date(new Date().setMonth(new Date().getMonth() - 1)).toISOString().split('T')[0];
+			dateTo = new Date().toISOString().split('T')[0];
+		} else if (whatDates === 'sixMonths') {
+			dateFrom = new Date(new Date().setMonth(new Date().getMonth() - 6)).toISOString().split('T')[0];
 			dateTo = new Date().toISOString().split('T')[0];
 		}
 		await getSubredditData(subredditSearch);
@@ -232,12 +267,33 @@
 							/>
 						</div>
 						<div class="btn-group w-100">
-							<button type="button" class="btn btn-outline-primary" onclick={() => setDates('full')}>Full Range</button>
-							<button type="button" class="btn btn-outline-success" onclick={() => setDates('pre')}>Pre Oct 7th</button>
-							<button type="button" class="btn btn-outline-warning" onclick={() => setDates('post')}
-								>Post Oct 7th</button
+							<button
+								type="button"
+								class="btn {selectedDateRange === 'full' ? 'btn-primary' : 'btn-outline-primary'}"
+								onclick={() => setDates('full')}>Full Range</button
 							>
-							<button type="button" class="btn btn-outline-info" onclick={() => setDates('month')}>Last Month</button>
+							<button
+								type="button"
+								class="btn {selectedDateRange === 'pre' ? 'btn-success' : 'btn-outline-success'}"
+								onclick={() => setDates('pre')}>Pre Oct 7th</button
+							>
+							<button
+								type="button"
+								class="btn {selectedDateRange === 'post' ? 'btn-warning' : 'btn-outline-warning'}"
+								onclick={() => setDates('post')}
+							>
+								Post Oct 7th
+							</button>
+							<button
+								type="button"
+								class="btn {selectedDateRange === 'month' ? 'btn-info' : 'btn-outline-info'}"
+								onclick={() => setDates('month')}>Last Month</button
+							>
+							<!-- <button
+								type="button"
+								class="btn {selectedDateRange === 'sixMonths' ? 'btn-secondary' : 'btn-outline-secondary'}"
+								onclick={() => setDates('sixMonths')}>Six Months</button
+							> -->
 						</div>
 					</Col>
 				</Row>
@@ -281,6 +337,12 @@
 					</Col>
 				</Row>
 			</div>
+
+			{#if errorMessage}
+				<div class="alert alert-danger">
+					{errorMessage}
+				</div>
+			{/if}
 		</div>
 	</div>
 
@@ -304,7 +366,7 @@
 				/>
 			</div>
 		</div>
-	{:else if !loading && subredditSearch}
+	{:else if !loading && subredditSearch && !errorMessage}
 		<div class="alert alert-info">
 			Not enough data for r/{subredditSearch}
 		</div>

@@ -7,7 +7,10 @@ import { redis } from '$lib/redis.js';
 export async function GET({ url }) {
 	const search = url.searchParams.get('subreddit') || '';
 
-	await redis.del(`subreddits:${search}:topusers`);
+	if (!search) {
+		return json({ error: 'Subreddit is required' }, { status: 400 });
+	}
+	// await redis.del(`subreddits:${search}:topusers`);
 	if (await redis.get(`subreddits:${search}:topusers`)) {
 		return json(await redis.get(`subreddits:${search}:topusers`));
 	} else {
@@ -25,7 +28,7 @@ export async function GET({ url }) {
 					authorName: 'desc'
 				}
 			},
-			take: 200
+			take: 50
 		});
 		const sortedUsers = topUsers.map((user) => ({
 			authorName: user.authorName,
