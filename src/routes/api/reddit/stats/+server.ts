@@ -2,9 +2,12 @@ import { json } from '@sveltejs/kit';
 import prisma from '$lib/prisma.js';
 
 export async function GET() {
-	const subredditCount = await prisma.subreddit.count();
-	const commentCount = await prisma.comment.count();
-	const userCount = await prisma.user.count();
+	// Using Promise.all to run the count queries in parallel rather than sequentially
+	const [subredditCount, commentCount, userCount] = await Promise.all([
+		prisma.subreddit.count(),
+		prisma.comment.count(),
+		prisma.user.count()
+	]);
 
 	return json({ subreddits: subredditCount, comments: commentCount, users: userCount });
 }
