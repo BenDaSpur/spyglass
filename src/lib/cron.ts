@@ -177,8 +177,8 @@ const getUserAndPosts = async (username: string): Promise<UserData> => {
 
 		log(`Fetching comments and submissions for user: ${username}`);
 		const [comments, userSubmissions] = await Promise.all([
-			user.getComments({ limit: 100 }), // Reduced from Infinity to improve performance
-			user.getSubmissions({ limit: 100 }) // Reduced from Infinity to improve performance
+			user.getComments({ limit: Infinity }), // Reduced from Infinity to improve performance
+			user.getSubmissions({ limit: Infinity }) // Reduced from Infinity to improve performance
 		]);
 
 		const duration = Date.now() - startTime;
@@ -249,8 +249,7 @@ const getPostComments = async (submission: Submission): Promise<Comment[]> => {
 	try {
 		log(`Fetching comments for post: ${submission.id} (${submission.title})`);
 		const comments = await submission.expandReplies({
-			limit: 100, // Limit to 100 comments per post
-			depth: 5 // Limit depth to 5 levels
+			limit: Infinity
 		});
 
 		const duration = Date.now() - startTime;

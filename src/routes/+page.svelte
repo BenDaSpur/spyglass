@@ -206,15 +206,27 @@
 				<Col>
 					<div class="stats-container">
 						<div class="stat-item">
-							<span class="stat-value"><CountUp targetNumber={totalUsersCount} /></span>
+							{#if totalUsersCount === 0}
+								<span class="stat-value"><i class="fas fa-spinner fa-spin"></i></span>
+							{:else}
+								<span class="stat-value"><CountUp targetNumber={totalUsersCount} /></span>
+							{/if}
 							<span class="stat-label">unique Reddit users</span>
 						</div>
 						<div class="stat-item">
-							<span class="stat-value"><CountUp targetNumber={totalCommentsCount} /></span>
+							{#if totalCommentsCount === 0}
+								<span class="stat-value"><i class="fas fa-spinner fa-spin"></i></span>
+							{:else}
+								<span class="stat-value"><CountUp targetNumber={totalCommentsCount} /></span>
+							{/if}
 							<span class="stat-label">individual comments</span>
 						</div>
 						<div class="stat-item">
-							<span class="stat-value"><CountUp targetNumber={totalSubredditsCount} /></span>
+							{#if totalSubredditsCount === 0}
+								<span class="stat-value"><i class="fas fa-spinner fa-spin"></i></span>
+							{:else}
+								<span class="stat-value"><CountUp targetNumber={totalSubredditsCount} /></span>
+							{/if}
 							<span class="stat-label">subreddits recorded</span>
 						</div>
 					</div>
