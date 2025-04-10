@@ -182,11 +182,6 @@
 		subredditSearch = 'h3h3productions';
 		getSubredditData('h3h3productions');
 		getStats();
-		const interval = setInterval(async () => {
-			await getStats();
-		}, 3600000);
-
-		return () => clearInterval(interval);
 	});
 </script>
 
