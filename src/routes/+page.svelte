@@ -356,7 +356,7 @@
 	{#if loading}
 		<div class="text-center my-5">
 			<Spinner size="lg" color="primary" />
-			<p class="mt-3 text-muted">Loading data, this can take up to 10 seconds...</p>
+			<p class="mt-3 text-muted">Loading data, this can take up to 30 seconds...</p>
 		</div>
 	{/if}
 
