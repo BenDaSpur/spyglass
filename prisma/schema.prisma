@@ -56,4 +56,6 @@ model Comment {
     @@index([subredditName])
     @@index([authorName, subredditName])
     @@index([createdAt])
+    @@index([subredditName, commentDate])
+    @@index([authorName, subredditName, commentDate])
 }
