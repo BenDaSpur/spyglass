@@ -55,6 +55,6 @@
 		"vite-plugin-iso-import": "^1.1.0"
 	},
 	"prisma": {
-		"schema": "prisma/schema"
+		"schema": "./prisma"
 	}
 }
