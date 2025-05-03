@@ -52,13 +52,13 @@ async function getTopInteractionsFromSubreddit(
     ),
     interactions AS (
       SELECT 
-        LOWER(c."subredditName") AS "subreddit",
+        c."subredditName" AS "subreddit",
         COUNT(DISTINCT LOWER(c."authorName"))::INTEGER AS "sharedUserCount"
       FROM "Comment" c
       INNER JOIN target_subreddit_users tsu ON LOWER(c."authorName") = tsu."authorName"
       WHERE LOWER(c."subredditName") != LOWER(${subredditName})
         AND c."commentDate" BETWEEN ${dateFrom}::timestamp AND ${dateTo}::timestamp
-      GROUP BY LOWER(c."subredditName")
+      GROUP BY c."subredditName"
       HAVING COUNT(DISTINCT LOWER(c."authorName")) > 1  -- Only include subreddits with meaningful interaction
     )
     SELECT *

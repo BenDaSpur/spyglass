@@ -180,8 +180,8 @@
 
 	onMount(() => {
 		subredditSearch = 'h3h3productions';
-		getSubredditData('h3h3productions');
 		getStats();
+		getSubredditData('h3h3productions');
 	});
 </script>
 

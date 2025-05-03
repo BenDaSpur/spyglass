@@ -13,6 +13,8 @@ model User {
     posts     Post[]
     comments  Comment[]
     isDeleted Boolean   @default(false)
+
+    @@index([isDeleted])
 }
 
 model Subreddit {
@@ -58,4 +60,15 @@ model Comment {
     @@index([createdAt])
     @@index([subredditName, commentDate])
     @@index([authorName, subredditName, commentDate])
+}
+
+model StatsSummary {
+    id              Int      @id @default(autoincrement())
+    totalUsers      Int
+    totalComments   Int
+    totalSubreddits Int
+    totalPosts      Int
+    updatedAt       DateTime @default(now())
+
+    @@index([updatedAt])
 }
