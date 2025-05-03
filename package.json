@@ -53,5 +53,8 @@
 		"svelte-apexcharts": "^1.0.2",
 		"tsx": "^4.19.2",
 		"vite-plugin-iso-import": "^1.1.0"
+	},
+	"prisma": {
+		"schema": "prisma/schema"
 	}
 }
