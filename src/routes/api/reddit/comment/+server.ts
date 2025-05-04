@@ -23,32 +23,37 @@ export async function GET({ url }) {
 // /api/newsletter POST
 
 export async function POST({ request }) {
-	const { author, body_html, body, link_id, subreddit, permalink, created_utc, id } = await request.json();
-	const key = request.headers.get('x-spyglass-key');
+	try {
+		const { author, body_html, body, link_id, subreddit, permalink, created_utc, id } = await request.json();
+		const key = request.headers.get('x-spyglass-key');
 
-	if (key !== SPYGLASS_SAFETY_KEY) {
-		return json({ error: 'Invalid key' }, { status: 401 });
-	}
-
-	const updatedComment = await prisma.comment.upsert({
-		where: { id: link_id },
-		update: {
-			authorName: author,
-			bodyHtml: body_html,
-			content: body,
-			subredditName: subreddit,
-			commentDate: created_utc ? epochToIso8601(created_utc) : undefined
-		},
-		create: {
-			id: link_id,
-			authorName: author,
-			bodyHtml: body_html,
-			content: body,
-			permalink,
-			subredditName: subreddit,
-			commentDate: created_utc ? epochToIso8601(created_utc) : undefined
+		if (key !== SPYGLASS_SAFETY_KEY) {
+			return json({ error: 'Invalid key' }, { status: 401 });
 		}
-	});
 
-	return json(updatedComment);
+		const updatedComment = await prisma.comment.upsert({
+			where: { id: link_id },
+			update: {
+				authorName: author,
+				bodyHtml: body_html,
+				content: body,
+				subredditName: subreddit,
+				commentDate: created_utc ? epochToIso8601(created_utc) : undefined
+			},
+			create: {
+				id: link_id,
+				authorName: author,
+				bodyHtml: body_html,
+				content: body,
+				permalink,
+				subredditName: subreddit,
+				commentDate: created_utc ? epochToIso8601(created_utc) : undefined
+			}
+		});
+
+		return json(updatedComment);
+	} catch (error) {
+		console.error('Error processing comment:', error);
+		return json({ error: 'Failed to process comment' }, { status: 500 });
+	}
 }
