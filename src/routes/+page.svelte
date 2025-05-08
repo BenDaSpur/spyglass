@@ -406,10 +406,6 @@
 				</ul>
 			</div>
 		</div>
-	{:else if !loadingUsers && !topSubredditUsers.length}
-		<div class="alert alert-info">
-			Not enough data for r/{subredditSearch}
-		</div>
 	{/if}
 </div>
 
