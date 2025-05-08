@@ -2,27 +2,15 @@ import { json } from '@sveltejs/kit';
 import prisma from '$lib/prisma';
 import { redis } from '$lib/redis.js';
 
-// Function to update the stats summary
-async function updateStatsSummary() {
-	const [subredditCount, commentCount, userCount, postCount] = await Promise.all([
-		prisma.subreddit.count(),
-		prisma.comment.count(),
-		prisma.user.count({ where: { isDeleted: false } }),
-		prisma.post.count()
-	]);
-
-	await prisma.statsSummary.create({
-		data: {
-			totalUsers: userCount,
-			totalComments: commentCount,
-			totalSubreddits: subredditCount,
-			totalPosts: postCount
-		}
-	});
-}
-
 export async function GET() {
-	const cacheKey = 'stats:counts';
+	// Get today's date string in YYYY-MM-DD format
+	const today = new Date();
+	const yyyy = today.getFullYear();
+	const mm = String(today.getMonth() + 1).padStart(2, '0');
+	const dd = String(today.getDate()).padStart(2, '0');
+	const dateString = `${yyyy}-${mm}-${dd}`;
+
+	const cacheKey = `stats:counts:${dateString}`;
 
 	// Try to get cached stats first
 	const cachedStats = await redis.get(cacheKey);
@@ -30,25 +18,36 @@ export async function GET() {
 		return json(cachedStats);
 	}
 
-	// Get the latest stats from the summary table
-	const latestStats = await prisma.statsSummary.findFirst({
+	// Get today's date range
+	const startOfDay = new Date();
+	startOfDay.setHours(0, 0, 0, 0);
+	const endOfDay = new Date();
+	endOfDay.setHours(23, 59, 59, 999);
+
+	// Check if there is a statsSummary for today
+	const todayStats = await prisma.statsSummary.findFirst({
+		where: {
+			updatedAt: {
+				gte: startOfDay,
+				lte: endOfDay
+			}
+		},
 		orderBy: { updatedAt: 'desc' }
 	});
 
-	if (latestStats) {
+	if (todayStats) {
 		const stats = {
-			subreddits: latestStats.totalSubreddits,
-			comments: latestStats.totalComments,
-			users: latestStats.totalUsers,
-			posts: latestStats.totalPosts
+			subreddits: todayStats.totalSubreddits,
+			comments: todayStats.totalComments,
+			users: todayStats.totalUsers,
+			posts: todayStats.totalPosts
 		};
-
 		// Cache the results for 24 hours
 		await redis.set(cacheKey, stats, { ex: 60 * 60 * 24 });
 		return json(stats);
 	}
 
-	// If no summary exists, calculate and cache
+	// If no summary for today, calculate and cache
 	const [subredditCount, commentCount, userCount, postCount] = await Promise.all([
 		prisma.subreddit.count(),
 		prisma.comment.count(),
@@ -66,8 +65,15 @@ export async function GET() {
 	// Cache the results for 24 hours
 	await redis.set(cacheKey, stats, { ex: 60 * 60 * 24 });
 
-	// Create initial summary
-	await updateStatsSummary();
+	// Create today's summary
+	await prisma.statsSummary.create({
+		data: {
+			totalUsers: userCount,
+			totalComments: commentCount,
+			totalSubreddits: subredditCount,
+			totalPosts: postCount
+		}
+	});
 
 	return json(stats);
 }
