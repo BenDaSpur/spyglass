@@ -60,6 +60,7 @@ model Comment {
     @@index([createdAt])
     @@index([subredditName, commentDate])
     @@index([authorName, subredditName, commentDate])
+    @@index([subredditName, commentDate, authorName])
 }
 
 model StatsSummary {

@@ -20,7 +20,8 @@
 	let subredditSearch = $state('');
 	let chartData = $state<ChartDataItem[]>([]);
 	let filteredSubreddits = $state<Subreddit[]>([]);
-	let loading = $state(false);
+	let loadingChart = $state(false);
+	let loadingUsers = $state(false);
 	let commentCount = $state(0);
 	let subredditAuthors = $state<string[]>([]);
 	let totalUsersCount = $state(0);
@@ -82,7 +83,7 @@
 		if (!searchedSubreddit) {
 			return;
 		}
-		loading = true;
+		loadingChart = true;
 		try {
 			const [commentCountResponse, interactionsResponse] = await Promise.all([
 				fetch(
@@ -108,7 +109,7 @@
 			console.error('Error fetching subreddit data:', error);
 			errorMessage = 'Failed to load subreddit data. Please try again.';
 		} finally {
-			loading = false;
+			loadingChart = false;
 		}
 	}
 
@@ -116,8 +117,11 @@
 		if (!searchedSubreddit) {
 			return;
 		}
+		loadingUsers = true;
 		try {
-			const response = await fetch(`/api/reddit/subreddit/users?subreddit=${encodeURIComponent(searchedSubreddit)}`);
+			const response = await fetch(
+				`/api/reddit/subreddit/users?subreddit=${encodeURIComponent(searchedSubreddit)}&dateFrom=${new Date(dateFrom).toISOString()}&dateTo=${new Date(dateTo).toISOString()}`
+			);
 			if (!response.ok) {
 				throw new Error(`HTTP error! status: ${response.status}`);
 			}
@@ -126,6 +130,8 @@
 		} catch (error) {
 			console.error('Error fetching subreddit top users:', error);
 			errorMessage = 'Failed to load top users. Please try again.';
+		} finally {
+			loadingUsers = false;
 		}
 	}
 
@@ -293,14 +299,14 @@
 							</button>
 							<button
 								type="button"
+								class="btn {selectedDateRange === 'sixMonths' ? 'btn-secondary' : 'btn-outline-secondary'}"
+								onclick={() => setDates('sixMonths')}>Six Months</button
+							>
+							<button
+								type="button"
 								class="btn {selectedDateRange === 'month' ? 'btn-info' : 'btn-outline-info'}"
 								onclick={() => setDates('month')}>Last Month</button
 							>
-							<!-- <button
-								type="button"
-								class="btn {selectedDateRange === 'sixMonths' ? 'btn-secondary' : 'btn-outline-secondary'}"
-								onclick={() => setDates('sixMonths')}>Six Months</button
-							> -->
 						</div>
 					</Col>
 				</Row>
@@ -353,14 +359,12 @@
 		</div>
 	</div>
 
-	{#if loading}
+	{#if loadingChart}
 		<div class="text-center my-5">
 			<Spinner size="lg" color="primary" />
-			<p class="mt-3 text-muted">Loading data, this can take up to 30 seconds...</p>
+			<p class="mt-3 text-muted">Loading chart data, this can take up to 60 seconds...</p>
 		</div>
-	{/if}
-
-	{#if chartData.length && subredditSearch}
+	{:else if chartData.length && subredditSearch && !loadingChart}
 		<div class="card mb-4">
 			<div class="card-body">
 				<BarChart
@@ -373,13 +377,18 @@
 				/>
 			</div>
 		</div>
-	{:else if !loading && subredditSearch && !errorMessage}
+	{:else if !loadingChart && subredditSearch && !errorMessage}
 		<div class="alert alert-info">
 			Not enough data for r/{subredditSearch}
 		</div>
 	{/if}
 
-	{#if topSubredditUsers.length}
+	{#if loadingUsers}
+		<div class="text-center my-3">
+			<Spinner size="md" color="secondary" />
+			<p class="mt-2 text-muted">Loading top users...</p>
+		</div>
+	{:else if topSubredditUsers.length && !loadingUsers}
 		<div class="card mb-4">
 			<div class="card-header">
 				<h2 class="h5 m-0">Top commenters in r/{subredditSearch}</h2>
@@ -396,6 +405,10 @@
 					{/each}
 				</ul>
 			</div>
+		</div>
+	{:else if !loadingUsers && !topSubredditUsers.length}
+		<div class="alert alert-info">
+			Not enough data for r/{subredditSearch}
 		</div>
 	{/if}
 </div>

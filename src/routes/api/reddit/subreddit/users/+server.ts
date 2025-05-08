@@ -1,18 +1,23 @@
 import { json } from '@sveltejs/kit';
 import prisma from '$lib/prisma.js';
-import { SPYGLASS_SAFETY_KEY } from '$env/static/private';
 import { redis } from '$lib/redis.js';
-// /api/newsletter GET
 
 export async function GET({ url }) {
 	const search = url.searchParams.get('subreddit') || '';
+	const dateFrom = url.searchParams.get('dateFrom') || 0;
+	const dateTo = url.searchParams.get('dateTo') || new Date().toISOString();
 
 	if (!search) {
 		return json({ error: 'Subreddit is required' }, { status: 400 });
 	}
-	// await redis.del(`subreddits:${search}:topusers`);
-	if (await redis.get(`subreddits:${search}:topusers`)) {
-		return json(await redis.get(`subreddits:${search}:topusers`));
+
+	const dateFromFormatted = new Date(dateFrom).toISOString();
+	const dateToFormatted = new Date(dateTo).toISOString();
+
+	const cacheKey = `subreddits:${search}:topusers:dateFrom:${dateFromFormatted}:dateTo:${dateToFormatted}`;
+
+	if (await redis.get(cacheKey)) {
+		return json(await redis.get(cacheKey));
 	} else {
 		const topUsers = await prisma.comment.groupBy({
 			_count: true,
@@ -21,6 +26,10 @@ export async function GET({ url }) {
 				subredditName: {
 					equals: search,
 					mode: 'insensitive'
+				},
+				commentDate: {
+					gte: dateFromFormatted,
+					lte: dateToFormatted
 				}
 			},
 			orderBy: {
@@ -34,7 +43,7 @@ export async function GET({ url }) {
 			authorName: user.authorName,
 			commentCount: user._count
 		}));
-		await redis.set(`subreddits:${search}:topusers`, JSON.stringify(sortedUsers));
+		await redis.set(cacheKey, JSON.stringify(sortedUsers));
 		return json(sortedUsers);
 	}
 }
