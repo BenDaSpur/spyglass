@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { Row, Col, Input, Spinner } from '@sveltestrap/sveltestrap';
 	import Accordion from '$lib/components/Accordion.svelte';
+	import { MetaTags } from 'svelte-meta-tags';
 
 	type User = {
 		username: string;
@@ -116,10 +117,7 @@
 	}
 </script>
 
-<svelte:head>
-	<title>Spyglass: Search Users</title>
-	<meta name="description" content="Search Reddit Users" />
-</svelte:head>
+<MetaTags title="Spyglass: Search Users" description="Search Reddit Users in the h3h3productions culture" />
 
 <Row>
 	<Col>

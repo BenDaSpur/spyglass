@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { Styles, Row, Col, Input, Spinner } from '@sveltestrap/sveltestrap';
+	import { MetaTags } from 'svelte-meta-tags';
 	import BarChart from '$lib/components/BarChart.svelte';
 	import CountUp from '$lib/components/CountUp.svelte';
 
@@ -191,10 +192,7 @@
 	});
 </script>
 
-<svelte:head>
-	<title>Spyglass</title>
-	<meta name="description" content="Search Reddit" />
-</svelte:head>
+<MetaTags title="Reddit Spyglass" description="Data tracking for H3 subreddits" />
 
 <Styles />
 
