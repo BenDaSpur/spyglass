@@ -33,9 +33,6 @@
 				<li class="nav-item">
 					<a class="nav-link {$page.url.pathname == '/h3stats' ? 'active' : ''}" href="/h3stats">H3 Stats</a>
 				</li>
-				<li class="nav-item">
-					<a class="nav-link" target="_blank" href="https://ethankleinlied.com">Ethan Klein Lied</a>
-				</li>
 			</ul>
 		</div>
 	</div>
