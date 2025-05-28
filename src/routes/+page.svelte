@@ -23,6 +23,8 @@
 	let filteredSubreddits = $state<Subreddit[]>([]);
 	let loadingChart = $state(false);
 	let loadingUsers = $state(false);
+	let loadingStats = $state(false);
+	let loadingSubreddits = $state(false);
 	let commentCount = $state(0);
 	let subredditAuthors = $state<string[]>([]);
 	let totalUsersCount = $state(0);
@@ -58,6 +60,7 @@
 			filteredSubreddits = [];
 			return;
 		}
+		loadingSubreddits = true;
 		try {
 			const response = await fetch(`/api/reddit/subreddit?search=${encodeURIComponent(searchTerm)}`);
 			if (!response.ok) {
@@ -70,68 +73,57 @@
 			console.error('Error fetching filtered subreddits:', error);
 			errorMessage = 'Failed to fetch subreddit list. Please try again.';
 			filteredSubreddits = [];
+		} finally {
+			loadingSubreddits = false;
 		}
 	}
 
 	// Function to fetch subreddit data
 	async function getSubredditData(searchedSubreddit: string) {
+		if (!searchedSubreddit) {
+			return;
+		}
+
+		loadingChart = true;
+		loadingUsers = true;
 		chartData = [];
 		commentCount = 0;
 		subredditAuthors = [];
 		topSubredditUsers = [];
 		errorMessage = '';
 
-		if (!searchedSubreddit) {
-			return;
-		}
-		loadingChart = true;
 		try {
-			const [commentCountResponse, interactionsResponse] = await Promise.all([
+			const [commentCountResponse, interactionsResponse, usersResponse] = await Promise.all([
 				fetch(
 					`/api/reddit/subreddit/count?search=${encodeURIComponent(searchedSubreddit)}&dateFrom=${new Date(dateFrom).toISOString()}&dateTo=${new Date(dateTo).toISOString()}`
 				),
 				fetch(
 					`/api/reddit/subreddit/interactions?subreddit=${encodeURIComponent(searchedSubreddit)}&dateFrom=${new Date(dateFrom).toISOString()}&dateTo=${new Date(dateTo).toISOString()}`
+				),
+				fetch(
+					`/api/reddit/subreddit/users?subreddit=${encodeURIComponent(searchedSubreddit)}&dateFrom=${new Date(dateFrom).toISOString()}&dateTo=${new Date(dateTo).toISOString()}`
 				)
 			]);
 
-			if (!commentCountResponse.ok || !interactionsResponse.ok) {
+			if (!commentCountResponse.ok || !interactionsResponse.ok || !usersResponse.ok) {
 				throw new Error('One or more API requests failed');
 			}
 
-			const commentCountJson = await commentCountResponse.json();
+			const [commentCountJson, chartJson, usersJson] = await Promise.all([
+				commentCountResponse.json(),
+				interactionsResponse.json(),
+				usersResponse.json()
+			]);
+
 			commentCount = commentCountJson.comments;
 			subredditAuthors = commentCountJson.authors;
-
-			const chartJson = await interactionsResponse.json();
 			chartData = chartJson.sort((a: ChartDataItem, b: ChartDataItem) => b.subreddit - a.subreddit);
-			await getSubredditTopUsers(searchedSubreddit);
+			topSubredditUsers = usersJson;
 		} catch (error) {
 			console.error('Error fetching subreddit data:', error);
 			errorMessage = 'Failed to load subreddit data. Please try again.';
 		} finally {
 			loadingChart = false;
-		}
-	}
-
-	async function getSubredditTopUsers(searchedSubreddit: string) {
-		if (!searchedSubreddit) {
-			return;
-		}
-		loadingUsers = true;
-		try {
-			const response = await fetch(
-				`/api/reddit/subreddit/users?subreddit=${encodeURIComponent(searchedSubreddit)}&dateFrom=${new Date(dateFrom).toISOString()}&dateTo=${new Date(dateTo).toISOString()}`
-			);
-			if (!response.ok) {
-				throw new Error(`HTTP error! status: ${response.status}`);
-			}
-			const data = await response.json();
-			topSubredditUsers = data;
-		} catch (error) {
-			console.error('Error fetching subreddit top users:', error);
-			errorMessage = 'Failed to load top users. Please try again.';
-		} finally {
 			loadingUsers = false;
 		}
 	}
@@ -149,6 +141,7 @@
 
 	// Function to get overall stats
 	async function getStats() {
+		loadingStats = true;
 		try {
 			const response = await fetch('/api/reddit/stats');
 			if (!response.ok) {
@@ -160,6 +153,9 @@
 			totalSubredditsCount = data.subreddits;
 		} catch (error) {
 			console.error('Error fetching stats:', error);
+			errorMessage = 'Failed to load overall stats. Please try again.';
+		} finally {
+			loadingStats = false;
 		}
 	}
 
@@ -201,54 +197,50 @@
 		<div class="card-body">
 			<h1 class="h4 mb-3">Reddit Data Explorer</h1>
 
-			<Row class="mb-3">
-				<Col>
-					<div class="stats-container">
-						<div class="stat-item">
-							{#if totalUsersCount === 0}
-								<span class="stat-value"><i class="fas fa-spinner fa-spin"></i></span>
-							{:else}
-								<span class="stat-value"><CountUp targetNumber={totalUsersCount} /></span>
-							{/if}
-							<span class="stat-label">unique Reddit users</span>
-						</div>
-						<div class="stat-item">
-							{#if totalCommentsCount === 0}
-								<span class="stat-value"><i class="fas fa-spinner fa-spin"></i></span>
-							{:else}
-								<span class="stat-value"><CountUp targetNumber={totalCommentsCount} /></span>
-							{/if}
-							<span class="stat-label">individual comments</span>
-						</div>
-						<div class="stat-item">
-							{#if totalSubredditsCount === 0}
-								<span class="stat-value"><i class="fas fa-spinner fa-spin"></i></span>
-							{:else}
-								<span class="stat-value"><CountUp targetNumber={totalSubredditsCount} /></span>
-							{/if}
-							<span class="stat-label">subreddits recorded</span>
-						</div>
-					</div>
+			<div class="stats-container">
+				<div class="stat-item">
+					{#if loadingStats}
+						<span class="stat-value"><Spinner size="sm" color="primary" /></span>
+					{:else}
+						<span class="stat-value"><CountUp targetNumber={totalUsersCount} /></span>
+					{/if}
+					<span class="stat-label">unique Reddit users</span>
+				</div>
+				<div class="stat-item">
+					{#if loadingStats}
+						<span class="stat-value"><Spinner size="sm" color="primary" /></span>
+					{:else}
+						<span class="stat-value"><CountUp targetNumber={totalCommentsCount} /></span>
+					{/if}
+					<span class="stat-label">individual comments</span>
+				</div>
+				<div class="stat-item">
+					{#if loadingStats}
+						<span class="stat-value"><Spinner size="sm" color="primary" /></span>
+					{:else}
+						<span class="stat-value"><CountUp targetNumber={totalSubredditsCount} /></span>
+					{/if}
+					<span class="stat-label">subreddits recorded</span>
+				</div>
+			</div>
 
-					<div class="mt-3">
-						<small class="text-muted">
-							Tracking data from:
-							{#each ['h3h3productions', 'h3snark', 'Hasan_Piker', 'Destiny', 'LivestreamFail', 'LeftoversH3'] as sub}
-								<a
-									href="#"
-									class="badge {subredditSearch === sub ? 'bg-success' : 'bg-secondary'} text-decoration-none me-1"
-									onclick={() => {
-										subredditSearch = sub;
-										getSubredditData(sub);
-									}}
-								>
-									r/{sub}
-								</a>
-							{/each}
-						</small>
-					</div>
-				</Col>
-			</Row>
+			<div class="mt-3">
+				<small class="text-muted">
+					Tracking data from:
+					{#each ['h3h3productions', 'h3snark', 'Hasan_Piker', 'Destiny', 'LivestreamFail', 'LeftoversH3'] as sub}
+						<a
+							href="#"
+							class="badge {subredditSearch === sub ? 'bg-success' : 'bg-secondary'} text-decoration-none me-1"
+							onclick={() => {
+								subredditSearch = sub;
+								getSubredditData(sub);
+							}}
+						>
+							r/{sub}
+						</a>
+					{/each}
+				</small>
+			</div>
 
 			<div class="date-controls mb-4">
 				<Row>
@@ -329,7 +321,14 @@
 							{/if}
 						</div>
 
-						{#if filteredSubreddits.length}
+						{#if loadingSubreddits}
+							<div class="subreddit-suggestions p-2 border rounded bg-light">
+								<div class="text-center">
+									<Spinner size="sm" color="primary" />
+									<small class="text-muted">Loading suggestions...</small>
+								</div>
+							</div>
+						{:else if filteredSubreddits.length}
 							<div class="subreddit-suggestions p-2 border rounded bg-light">
 								{#each filteredSubreddits as subreddit}
 									<button
@@ -360,7 +359,7 @@
 	{#if loadingChart}
 		<div class="text-center my-5">
 			<Spinner size="lg" color="primary" />
-			<p class="mt-3 text-muted">Loading chart data, this can take up to 60 seconds...</p>
+			<p class="mt-3 text-muted">Loading chart data, this can take up to a few minutes...</p>
 		</div>
 	{:else if chartData.length && subredditSearch && !loadingChart}
 		<div class="card mb-4">
@@ -384,7 +383,7 @@
 	{#if loadingUsers}
 		<div class="text-center my-3">
 			<Spinner size="md" color="secondary" />
-			<p class="mt-2 text-muted">Loading top users...</p>
+			<p class="mt-2 text-muted">Loading top users for the selected date range...</p>
 		</div>
 	{:else if topSubredditUsers.length && !loadingUsers}
 		<div class="card mb-4">
