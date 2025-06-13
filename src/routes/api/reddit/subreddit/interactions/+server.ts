@@ -43,7 +43,7 @@ async function getTopInteractionsFromSubreddit(
 	dateFrom: string,
 	dateTo: string
 ) {
-	const interactions = await prisma.$queryRaw<{ otherSubreddit: string; sharedUserCount: number }[]>`
+	const interactions = await prisma.$queryRaw<{ subreddit: string; sharedUserCount: number }[]>`
     WITH target_subreddit_users AS (
       SELECT DISTINCT LOWER("authorName") AS "authorName"
       FROM "Comment"
@@ -52,13 +52,13 @@ async function getTopInteractionsFromSubreddit(
     ),
     interactions AS (
       SELECT 
-        c."subredditName" AS "subreddit",
+        LOWER(c."subredditName") AS "subreddit",
         COUNT(DISTINCT LOWER(c."authorName"))::INTEGER AS "sharedUserCount"
       FROM "Comment" c
       INNER JOIN target_subreddit_users tsu ON LOWER(c."authorName") = tsu."authorName"
       WHERE LOWER(c."subredditName") != LOWER(${subredditName})
         AND c."commentDate" BETWEEN ${dateFrom}::timestamp AND ${dateTo}::timestamp
-      GROUP BY c."subredditName"
+      GROUP BY LOWER(c."subredditName")
       HAVING COUNT(DISTINCT LOWER(c."authorName")) > 1  -- Only include subreddits with meaningful interaction
     )
     SELECT *
