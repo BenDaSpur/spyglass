@@ -50,14 +50,14 @@ export async function GET() {
 	// If no summary for today, calculate and cache
 	const [subredditCount, commentCount, userCount, postCount] = await Promise.all([
 		prisma.subreddit.count(),
-		prisma.comment.count(),
+		prisma.$queryRaw`SELECT count(*) * 100 AS approx_total FROM "Comment" TABLESAMPLE SYSTEM(1)`,
 		prisma.user.count({ where: { isDeleted: false } }),
 		prisma.post.count()
 	]);
 
 	const stats = {
 		subreddits: subredditCount,
-		comments: commentCount,
+		comments: Number(commentCount[0].approx_total),
 		users: userCount,
 		posts: postCount
 	};
@@ -68,10 +68,10 @@ export async function GET() {
 	// Create today's summary
 	await prisma.statsSummary.create({
 		data: {
-			totalUsers: userCount,
-			totalComments: commentCount,
-			totalSubreddits: subredditCount,
-			totalPosts: postCount
+			totalUsers: stats.users,
+			totalComments: stats.comments,
+			totalSubreddits: stats.subreddits,
+			totalPosts: stats.posts
 		}
 	});
 
