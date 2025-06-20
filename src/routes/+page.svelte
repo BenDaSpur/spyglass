@@ -224,10 +224,10 @@
 				</div>
 			</div>
 
-			<div class="mt-3">
+			<div class="my-3">
 				<small class="text-muted">
 					Tracking data from:
-					{#each ['h3h3productions', 'h3snark', 'Hasan_Piker', 'Destiny', 'LivestreamFail', 'LeftoversH3'] as sub}
+					{#each ['h3h3productions', 'Hasan_Piker', 'Destiny', 'LivestreamFail', 'LeftoversH3'] as sub}
 						<a
 							href="#"
 							class="badge {subredditSearch === sub ? 'bg-success' : 'bg-secondary'} text-decoration-none me-1"
@@ -242,7 +242,7 @@
 				</small>
 			</div>
 
-			<div class="date-controls mb-4">
+			<div class="date-controls my-3">
 				<Row>
 					<Col md={8}>
 						<div class="input-group mb-2">
