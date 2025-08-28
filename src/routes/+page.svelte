@@ -31,9 +31,9 @@
 	let totalCommentsCount = $state(0);
 	let totalSubredditsCount = $state(0);
 	let topSubredditUsers = $state<User[]>([]);
-	let dateFrom = $state(new Date(0).toISOString().split('T')[0]);
+	let dateFrom = $state(new Date(new Date().setMonth(new Date().getMonth() - 1)).toISOString().split('T')[0]);
 	let dateTo = $state(new Date().toISOString().split('T')[0]);
-	let selectedDateRange = $state('full');
+	let selectedDateRange = $state('month');
 	let errorMessage = $state('');
 
 	let timeout: ReturnType<typeof setTimeout>;
@@ -184,7 +184,7 @@
 	onMount(() => {
 		subredditSearch = 'h3h3productions';
 		getStats();
-		getSubredditData('h3h3productions');
+		setDates('month'); // Set to last month by default for faster loading
 	});
 </script>
 
