@@ -28,7 +28,7 @@ const r = new snoowrap({
 });
 
 // Set up concurrency limits
-const subredditLimit = pLimit(3); // Process 3 subreddits at a time
+const subredditLimit = pLimit(5); // Process 5 subreddits at a time
 const postLimit = pLimit(5); // Process 5 posts at a time
 const commentLimit = pLimit(10); // Process 10 comments at a time
 
@@ -95,9 +95,22 @@ export default async function run() {
 												`Processing comment: ${comment.id} by ${comment.author.name} (${++processedComments} total comments)`
 											);
 
-											await upsertUser(comment.author.name);
-											log(`Fetching user history for: ${comment.author.name}`);
-											const userInfo = await getUserAndPosts(comment.author.name);
+											// USER CACHE LOGIC START
+											let userInfo: UserData | null = null;
+											const cachedUser = userCache.get(comment.author.name);
+											const now = Date.now();
+											if (cachedUser && now - cachedUser.lastProcessed < USER_CACHE_TTL) {
+												log(`User ${comment.author.name} found in cache, skipping re-fetch.`);
+												userInfo = cachedUser.data;
+											} else {
+												await upsertUser(comment.author.name);
+												log(`Fetching user history for: ${comment.author.name}`);
+												userInfo = await getUserAndPosts(comment.author.name);
+												// Update cache
+												userCache.set(comment.author.name, { lastProcessed: now, data: userInfo });
+											}
+											// USER CACHE LOGIC END
+
 											log(`Found ${userInfo.comments.length} comments in user history for ${comment.author.name}`);
 
 											// Pre-filter comments that need to be inserted
@@ -209,7 +222,7 @@ const getLatestSubredditPosts = async (subredditName: string): Promise<Submissio
 		log(`Found ${newSubmissions.length} new posts in r/${subredditName}`);
 
 		let hotSubmissions: Submission[] = [];
-		if (Math.random() <= 0.2) {
+		if (Math.random() <= 0.4) {
 			log(`Also fetching hot posts for r/${subredditName}`);
 			hotSubmissions = await subreddit.getHot({ limit: 5 });
 			log(`Found ${hotSubmissions.length} hot posts in r/${subredditName}`);
@@ -271,9 +284,21 @@ const getPostComments = async (submission: Submission): Promise<Comment[]> => {
 let apiCallCount = 0;
 let cacheHits = 0;
 
-// Cache subreddits to reduce API calls
+// Cache subreddits to reduce API calls4
 type SubredditCacheData = Record<string, unknown>;
 const subredditCache = new Map<string, SubredditCacheData>();
+
+// User cache to avoid re-processing users within 24 hours
+interface UserCacheEntry {
+	lastProcessed: number; // timestamp in ms
+	data: UserData;
+}
+const userCache = new Map<string, UserCacheEntry>();
+const USER_CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours in ms
+
+// In-memory caches for upserted posts and comments (per job run)
+const upsertedPostIds = new Set<string>();
+const upsertedCommentIds = new Set<string>();
 
 const upsertUser = async (user: string) => {
 	apiCallCount++;
@@ -327,6 +352,10 @@ const upsertSubreddit = async (subreddit: string, tracking = false) => {
 };
 
 const upsertPost = async (submission: Submission) => {
+	if (upsertedPostIds.has(submission.id)) {
+		log(`Post ${submission.id} already upserted in this run, skipping.`);
+		return;
+	}
 	apiCallCount++;
 	try {
 		log(`Upserting post: ${submission.id} (${submission.title})`);
@@ -347,6 +376,7 @@ const upsertPost = async (submission: Submission) => {
 		});
 
 		const postData = await response.data;
+		upsertedPostIds.add(submission.id);
 		return postData;
 	} catch (error) {
 		log(`Error upserting post ${submission.id}`, error);
@@ -360,6 +390,10 @@ interface ExtendedComment extends Comment {
 }
 
 const upsertComment = async (comment: Comment) => {
+	if (upsertedCommentIds.has(comment.id)) {
+		log(`Comment ${comment.id} already upserted in this run, skipping.`);
+		return;
+	}
 	apiCallCount++;
 	try {
 		log(`Upserting comment: ${comment.id}`);
@@ -376,6 +410,7 @@ const upsertComment = async (comment: Comment) => {
 		});
 
 		const commentData = await response.data;
+		upsertedCommentIds.add(comment.id);
 		return commentData;
 	} catch (error) {
 		log(`Error upserting comment ${comment.id}`, error);
