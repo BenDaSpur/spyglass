@@ -1,18 +1,37 @@
 import snoowrap, { type RedditUser, type Submission, type Comment } from 'snoowrap';
 import axios from 'axios';
-import {
-	REDDIT_CLIENT_ID,
-	REDDIT_CLIENT_SECRET,
-	REDDIT_PASSWORD,
-	REDDIT_USERNAME,
-	SPYGLASS_SAFETY_KEY,
-	NODE_ENV
-} from '$env/static/private';
+
+// Handle environment variables - either from SvelteKit or process.env
+let REDDIT_CLIENT_ID: string;
+let REDDIT_CLIENT_SECRET: string;
+let REDDIT_PASSWORD: string;
+let REDDIT_USERNAME: string;
+let SPYGLASS_SAFETY_KEY: string;
+let NODE_ENV: string;
+
+try {
+	// Try to import from SvelteKit environment (when running in app context)
+	const env = await import('$env/static/private');
+	REDDIT_CLIENT_ID = env.REDDIT_CLIENT_ID;
+	REDDIT_CLIENT_SECRET = env.REDDIT_CLIENT_SECRET;
+	REDDIT_PASSWORD = env.REDDIT_PASSWORD;
+	REDDIT_USERNAME = env.REDDIT_USERNAME;
+	SPYGLASS_SAFETY_KEY = env.SPYGLASS_SAFETY_KEY;
+	NODE_ENV = env.NODE_ENV;
+} catch {
+	// Fall back to process.env (when running standalone)
+	REDDIT_CLIENT_ID = process.env.REDDIT_CLIENT_ID || '';
+	REDDIT_CLIENT_SECRET = process.env.REDDIT_CLIENT_SECRET || '';
+	REDDIT_PASSWORD = process.env.REDDIT_PASSWORD || '';
+	REDDIT_USERNAME = process.env.REDDIT_USERNAME || '';
+	SPYGLASS_SAFETY_KEY = process.env.SPYGLASS_SAFETY_KEY || '';
+	NODE_ENV = process.env.NODE_ENV || 'development';
+}
 
 // Add rate limiting and concurrency control
 import pLimit from 'p-limit';
 
-const baseUrl = NODE_ENV === 'development' ? 'http://localhost:5173' : 'https://spyglass-gamma.vercel.app';
+const baseUrl = NODE_ENV === 'development' ? 'http://localhost:5173' : 'https://redditspyglass.com';
 
 // Simple logging function with timestamps
 const log = (message: string, ...args: unknown[]) => {
