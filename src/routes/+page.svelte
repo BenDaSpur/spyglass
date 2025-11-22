@@ -35,6 +35,7 @@
 	let dateTo = $state(new Date().toISOString().split('T')[0]);
 	let selectedDateRange = $state('month');
 	let errorMessage = $state('');
+	let psaMinimized = $state(false);
 
 	let timeout: ReturnType<typeof setTimeout>;
 
@@ -181,7 +182,29 @@
 		await getSubredditData(subredditSearch);
 	}
 
+	function minimizePSA() {
+		psaMinimized = true;
+		if (typeof window !== 'undefined') {
+			localStorage.setItem('psa-minimized', 'true');
+		}
+	}
+
+	function expandPSA() {
+		psaMinimized = false;
+		if (typeof window !== 'undefined') {
+			localStorage.setItem('psa-minimized', 'false');
+		}
+	}
+
 	onMount(() => {
+		// Check if PSA has been minimized
+		if (typeof window !== 'undefined') {
+			const minimized = localStorage.getItem('psa-minimized');
+			if (minimized === 'true') {
+				psaMinimized = true;
+			}
+		}
+
 		subredditSearch = 'h3h3productions';
 		getStats();
 		setDates('month'); // Set to last month by default for faster loading
@@ -193,6 +216,49 @@
 <Styles />
 
 <div class="container py-4">
+	{#if psaMinimized}
+		<div class="alert alert-info mb-4 cursor-pointer" role="alert" onclick={expandPSA}>
+			<div class="d-flex align-items-center justify-content-between">
+				<small class="mb-0">
+					<strong>Project Update:</strong> This project is winding down - click to read more
+				</small>
+				<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-chevron-down" viewBox="0 0 16 16">
+					<path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/>
+				</svg>
+			</div>
+		</div>
+	{:else}
+		<div class="alert alert-info alert-dismissible fade show mb-4" role="alert">
+			<div class="d-flex align-items-start">
+				<div class="flex-grow-1">
+					<h5 class="alert-heading mb-2">Project Update - November 21, 2025</h5>
+					<p class="mb-2">
+						This project is winding down due to <a
+							href="https://www.reddit.com/r/reddit/comments/1l2hl4l/curate_your_reddit_profile_content_with_new/"
+							target="_blank"
+							rel="noopener noreferrer"
+							class="alert-link"
+						>Reddit's new privacy features</a> and being laid off (can't afford to run the expensive cron script). The site will stay online but won't see many new stats. Thanks for using Reddit Spyglass!
+					</p>
+					<p class="mb-0">
+						<small>
+							Support creators in legal battles:
+							<a href="https://www.gofundme.com/f/support-kaceytrons-legal-battle-fund" target="_blank" rel="noopener noreferrer" class="alert-link">Kaceytron</a>,
+							<a href="https://www.gofundme.com/f/denims-v-ethan-klein-fair-use-lawsuit-defense-fund" target="_blank" rel="noopener noreferrer" class="alert-link">Denims</a>,
+							<a href="https://www.gofundme.com/f/frogans-lawsuit-defense-fund" target="_blank" rel="noopener noreferrer" class="alert-link">Frogan</a>
+						</small>
+					</p>
+				</div>
+				<button
+					type="button"
+					class="btn-close ms-3"
+					aria-label="Close"
+					onclick={minimizePSA}
+				></button>
+			</div>
+		</div>
+	{/if}
+
 	<div class="card mb-4">
 		<div class="card-body">
 			<h1 class="h4 mb-3">Reddit Data Explorer</h1>
@@ -440,5 +506,13 @@
 
 	.suggestion-item:hover {
 		background-color: #e9ecef;
+	}
+
+	.cursor-pointer {
+		cursor: pointer;
+	}
+
+	.cursor-pointer:hover {
+		opacity: 0.9;
 	}
 </style>
