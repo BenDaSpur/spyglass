@@ -32,7 +32,7 @@
 	let totalSubredditsCount = $state(0);
 	let topSubredditUsers = $state<User[]>([]);
 	let dateFrom = $state(new Date(0).toISOString().split('T')[0]);
-	let dateTo = $state(new Date().toISOString().split('T')[0]);
+	let dateTo = $state(new Date('2025-11-30').toISOString().split('T')[0]);
 	let selectedDateRange = $state('full');
 	let errorMessage = $state('');
 	let psaMinimized = $state(false);
@@ -165,7 +165,7 @@
 
 		if (whatDates === 'full') {
 			dateFrom = new Date(0).toISOString().split('T')[0];
-			dateTo = new Date().toISOString().split('T')[0];
+			dateTo = new Date('2025-11-30').toISOString().split('T')[0];
 		} else if (whatDates === 'pre') {
 			dateFrom = new Date(0).toISOString().split('T')[0];
 			dateTo = new Date('2023-10-07').toISOString().split('T')[0];
