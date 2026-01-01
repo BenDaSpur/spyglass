@@ -31,9 +31,9 @@
 	let totalCommentsCount = $state(0);
 	let totalSubredditsCount = $state(0);
 	let topSubredditUsers = $state<User[]>([]);
-	let dateFrom = $state(new Date(new Date().setMonth(new Date().getMonth() - 1)).toISOString().split('T')[0]);
+	let dateFrom = $state(new Date(0).toISOString().split('T')[0]);
 	let dateTo = $state(new Date().toISOString().split('T')[0]);
-	let selectedDateRange = $state('month');
+	let selectedDateRange = $state('full');
 	let errorMessage = $state('');
 	let psaMinimized = $state(false);
 
@@ -207,7 +207,7 @@
 
 		subredditSearch = 'h3h3productions';
 		getStats();
-		setDates('month'); // Set to last month by default for faster loading
+		setDates('full');
 	});
 </script>
 
@@ -222,8 +222,18 @@
 				<small class="mb-0">
 					<strong>Project Update:</strong> This project is winding down - click to read more
 				</small>
-				<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-chevron-down" viewBox="0 0 16 16">
-					<path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/>
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					width="16"
+					height="16"
+					fill="currentColor"
+					class="bi bi-chevron-down"
+					viewBox="0 0 16 16"
+				>
+					<path
+						fill-rule="evenodd"
+						d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"
+					/>
 				</svg>
 			</div>
 		</div>
@@ -237,24 +247,35 @@
 							href="https://www.reddit.com/r/reddit/comments/1l2hl4l/curate_your_reddit_profile_content_with_new/"
 							target="_blank"
 							rel="noopener noreferrer"
-							class="alert-link"
-						>Reddit's new privacy features</a> and being laid off (can't afford to run the expensive cron script). The site will stay online but won't see many new stats. Thanks for using Reddit Spyglass!
+							class="alert-link">Reddit's new privacy features</a
+						> and being laid off (can't afford to run the expensive cron script). The site will stay online but won't see
+						many new stats. Thanks for using Reddit Spyglass!
 					</p>
 					<p class="mb-0">
 						<small>
 							Support creators in legal battles:
-							<a href="https://www.gofundme.com/f/support-kaceytrons-legal-battle-fund" target="_blank" rel="noopener noreferrer" class="alert-link">Kaceytron</a>,
-							<a href="https://www.gofundme.com/f/denims-v-ethan-klein-fair-use-lawsuit-defense-fund" target="_blank" rel="noopener noreferrer" class="alert-link">Denims</a>,
-							<a href="https://www.gofundme.com/f/frogans-lawsuit-defense-fund" target="_blank" rel="noopener noreferrer" class="alert-link">Frogan</a>
+							<a
+								href="https://www.gofundme.com/f/support-kaceytrons-legal-battle-fund"
+								target="_blank"
+								rel="noopener noreferrer"
+								class="alert-link">Kaceytron</a
+							>,
+							<a
+								href="https://www.gofundme.com/f/denims-v-ethan-klein-fair-use-lawsuit-defense-fund"
+								target="_blank"
+								rel="noopener noreferrer"
+								class="alert-link">Denims</a
+							>,
+							<a
+								href="https://www.gofundme.com/f/frogans-lawsuit-defense-fund"
+								target="_blank"
+								rel="noopener noreferrer"
+								class="alert-link">Frogan</a
+							>
 						</small>
 					</p>
 				</div>
-				<button
-					type="button"
-					class="btn-close ms-3"
-					aria-label="Close"
-					onclick={minimizePSA}
-				></button>
+				<button type="button" class="btn-close ms-3" aria-label="Close" onclick={minimizePSA}></button>
 			</div>
 		</div>
 	{/if}
@@ -353,16 +374,6 @@
 							>
 								Post Oct 7th
 							</button>
-							<button
-								type="button"
-								class="btn {selectedDateRange === 'sixMonths' ? 'btn-secondary' : 'btn-outline-secondary'}"
-								onclick={() => setDates('sixMonths')}>Six Months</button
-							>
-							<button
-								type="button"
-								class="btn {selectedDateRange === 'month' ? 'btn-info' : 'btn-outline-info'}"
-								onclick={() => setDates('month')}>Last Month</button
-							>
 						</div>
 					</Col>
 				</Row>
